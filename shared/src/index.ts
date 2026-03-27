@@ -1,0 +1,57 @@
+import { z } from 'zod';
+
+export const UserSchema = z.object({
+  id: z.string().uuid(),
+  username: z.string().min(3).max(50),
+  createdAt: z.string().datetime()
+});
+
+export type User = z.infer<typeof UserSchema>;
+
+export const CheckStatusSchema = z.enum(["NEW", "UP", "DOWN", "PAUSED"]);
+export type CheckStatus = z.infer<typeof CheckStatusSchema>;
+
+export const CheckSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1).max(100),
+  slug: z.string().min(1).max(100),
+  tags: z.string().optional(), // Comma separated tags
+  intervalSeconds: z.number().int().min(60), // Minimum 1 minute
+  graceSeconds: z.number().int().min(60), // Minimum 1 minute
+  status: CheckStatusSchema,
+  lastPing: z.string().datetime().nullable(),
+  createdAt: z.string().datetime()
+});
+
+export type Check = z.infer<typeof CheckSchema>;
+
+export const CreateCheckSchema = z.object({
+  name: z.string().min(1).max(100),
+  tags: z.string().optional(),
+  intervalSeconds: z.number().int().min(60),
+  graceSeconds: z.number().int().min(60),
+});
+
+export type CreateCheckDTO = z.infer<typeof CreateCheckSchema>;
+
+export const UpdateCheckSchema = CreateCheckSchema.partial();
+export type UpdateCheckDTO = z.infer<typeof UpdateCheckSchema>;
+
+export const PingSchema = z.object({
+  id: z.string().uuid(),
+  checkId: z.string().uuid(),
+  remoteIp: z.string().nullable(),
+  userAgent: z.string().nullable(),
+  scheme: z.string().nullable(),
+  method: z.string().nullable(),
+  createdAt: z.string().datetime()
+});
+
+export type Ping = z.infer<typeof PingSchema>;
+
+export const LoginSchema = z.object({
+  username: z.string(),
+  password: z.string()
+});
+
+export type LoginDTO = z.infer<typeof LoginSchema>;

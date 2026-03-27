@@ -1,0 +1,21 @@
+{
+  "name": "@healthchecks/shared",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@tsconfig/node20": "^20.1.9",
+    "typescript": "^6.0.2"
+  }
+}
