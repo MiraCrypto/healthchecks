@@ -58,7 +58,16 @@ export default async function checkRoutes(fastify: FastifyInstance) {
     const parseRes = UpdateCheckSchema.safeParse(request.body);
     if (!parseRes.success) return reply.status(400).send({ error: parseRes.error.issues });
 
-    await checkRepo.update(id, userId, parseRes.data);
+    const updateData: any = { ...parseRes.data };
+    if (updateData.name) {
+      updateData.slug = updateData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    }
+    // Convert undefined to null for description to ensure it gets cleared if empty
+    if ('description' in updateData && updateData.description === undefined) {
+      updateData.description = null;
+    }
+
+    await checkRepo.update(id, userId, updateData);
     const updated = await checkRepo.findById(id, userId);
     return reply.send(updated);
   });
