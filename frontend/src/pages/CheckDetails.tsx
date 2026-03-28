@@ -1,9 +1,69 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Heading, Card, Text, Badge, Button, Flex, Table, Box } from '@radix-ui/themes';
+import { Container, Heading, Card, Text, Badge, Button, Flex, Table, Box, Dialog, ScrollArea, Code } from '@radix-ui/themes';
 import { Check, Ping } from '@healthchecks/shared';
 import { format, formatDistanceToNow } from 'date-fns';
-import { ArrowLeft, Trash2, FileText } from 'lucide-react';
+import { ArrowLeft, Trash2, FileText, Copy, ExternalLink } from 'lucide-react';
+
+function PayloadViewer({ pingId }: { pingId: string }) {
+  const [content, setContent] = useState<string>('');
+  const [contentType, setContentType] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchPayload = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const res = await fetch(`/ping/payload/${pingId}`);
+        if (!res.ok) {
+          throw new Error('Failed to load payload');
+        }
+        const ct = res.headers.get('content-type') || '';
+        setContentType(ct);
+
+        if (ct.includes('text/') || ct.includes('application/json')) {
+          const text = await res.text();
+          if (isMounted) setContent(text);
+        } else {
+          // It's binary or something else we don't want to render as raw text
+          if (isMounted) setContent('Binary or unsupported payload format.');
+        }
+      } catch (err: any) {
+        if (isMounted) setError(err.message || 'Error loading payload');
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchPayload();
+    return () => { isMounted = false; };
+  }, [pingId]);
+
+  if (loading) return <Text color="gray">Loading payload...</Text>;
+  if (error) return <Text color="red">{error}</Text>;
+
+  const isText = contentType.includes('text/') || contentType.includes('application/json');
+
+  return (
+    <Box mt="2" mb="4">
+      {isText ? (
+        <ScrollArea type="always" scrollbars="both" style={{ maxHeight: 300 }}>
+          <Box style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontFamily: 'monospace', fontSize: 'var(--font-size-2)', backgroundColor: 'var(--gray-3)', padding: 'var(--space-3)', borderRadius: 'var(--radius-2)' }}>
+            {content}
+          </Box>
+        </ScrollArea>
+      ) : (
+        <Text color="gray" style={{ fontStyle: 'italic' }}>
+          {content}
+        </Text>
+      )}
+    </Box>
+  );
+}
 
 export default function CheckDetails() {
   const { id } = useParams<{ id: string }>();
@@ -11,6 +71,7 @@ export default function CheckDetails() {
   const [check, setCheck] = useState<Check | null>(null);
   const [pings, setPings] = useState<Ping[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPingForPayload, setSelectedPingForPayload] = useState<Ping | null>(null);
 
   const loadData = async () => {
     try {
@@ -138,7 +199,7 @@ export default function CheckDetails() {
               <Table.Cell><Badge color="blue">{ping.method || 'GET'}</Badge></Table.Cell>
               <Table.Cell>
                 {ping.hasPayload ? (
-                  <Button variant="soft" size="1" onClick={() => window.open(`/ping/payload/${ping.id}`, '_blank')}>
+                  <Button variant="soft" size="1" onClick={() => setSelectedPingForPayload(ping)}>
                     <FileText size={14} /> View Payload
                   </Button>
                 ) : (
@@ -149,6 +210,41 @@ export default function CheckDetails() {
           ))}
         </Table.Body>
       </Table.Root>
+
+      <Dialog.Root open={!!selectedPingForPayload} onOpenChange={(open) => !open && setSelectedPingForPayload(null)}>
+        <Dialog.Content style={{ maxWidth: 600 }}>
+          <Dialog.Title>Ping Payload</Dialog.Title>
+          <Dialog.Description size="2" mb="4">
+            Payload details for ping at {selectedPingForPayload && format(new Date(selectedPingForPayload.createdAt), 'PPpp')}
+          </Dialog.Description>
+
+          {selectedPingForPayload && <PayloadViewer pingId={selectedPingForPayload.id} />}
+
+          <Flex gap="3" mt="4" justify="end">
+            {selectedPingForPayload && (
+              <>
+                <Button
+                  variant="soft"
+                  color="blue"
+                  onClick={() => navigator.clipboard.writeText(`${window.location.origin}/ping/payload/${selectedPingForPayload.id}`)}
+                >
+                  <Copy size={16} /> Copy Permlink
+                </Button>
+                <Button
+                  variant="soft"
+                  color="gray"
+                  onClick={() => window.open(`/ping/payload/${selectedPingForPayload.id}`, '_blank')}
+                >
+                  <ExternalLink size={16} /> Open in New Tab
+                </Button>
+              </>
+            )}
+            <Dialog.Close>
+              <Button variant="soft" color="gray">Close</Button>
+            </Dialog.Close>
+          </Flex>
+        </Dialog.Content>
+      </Dialog.Root>
     </Container>
   );
 }
