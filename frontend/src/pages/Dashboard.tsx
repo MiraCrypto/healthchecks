@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Container, Heading, Table, Badge, Button, Flex, Text, Dialog, TextField } from '@radix-ui/themes';
 import { Check } from '@healthchecks/shared';
@@ -14,12 +13,19 @@ export default function Dashboard() {
   const loadChecks = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('/api/checks');
-      setChecks(res.data);
+      const res = await fetch('/api/checks');
+      if (res.status === 401) {
+        navigate('/login');
+        return;
+      }
+      if (!res.ok) throw new Error('Failed to load checks');
+      const data = await res.json();
+      setChecks(data);
     } catch (err: any) {
-      if (err.response?.status === 401) navigate('/login');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -96,10 +102,14 @@ function CreateCheckDialog({ onCreated }: { onCreated: () => void }) {
 
   const handleSubmit = async () => {
     if (!name.trim()) return;
-    await axios.post('/api/checks', {
-      name,
-      intervalSeconds: intervalMin * 60,
-      graceSeconds: Math.floor(intervalMin * 60 * 0.2) // 20% grace period by default
+    await fetch('/api/checks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        intervalSeconds: intervalMin * 60,
+        graceSeconds: Math.floor(intervalMin * 60 * 0.2) // 20% grace period by default
+      })
     });
     setName('');
     onCreated();

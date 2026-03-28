@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Heading, Card, Text, Badge, Button, Flex, Table, Box } from '@radix-ui/themes';
 import { Check, Ping } from '@healthchecks/shared';
@@ -16,16 +15,28 @@ export default function CheckDetails() {
   const loadData = async () => {
     try {
       const [checkRes, pingsRes] = await Promise.all([
-        axios.get(`/api/checks/${id}`),
-        axios.get(`/api/checks/${id}/pings`)
+        fetch(`/api/checks/${id}`),
+        fetch(`/api/checks/${id}/pings`)
       ]);
-      setCheck(checkRes.data);
-      setPings(pingsRes.data);
+
+      if (checkRes.status === 401 || pingsRes.status === 401) {
+        navigate('/login');
+        return;
+      }
+      if (checkRes.status === 404) {
+        navigate('/');
+        return;
+      }
+
+      if (!checkRes.ok || !pingsRes.ok) throw new Error('Failed to load data');
+
+      setCheck(await checkRes.json());
+      setPings(await pingsRes.json());
     } catch (err: any) {
-      if (err.response?.status === 401) navigate('/login');
-      else if (err.response?.status === 404) navigate('/');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -37,7 +48,8 @@ export default function CheckDetails() {
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this check? This cannot be undone.')) return;
     try {
-      await axios.delete(`/api/checks/${id}`);
+      const res = await fetch(`/api/checks/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete check');
       navigate('/');
     } catch (err) {
       alert('Failed to delete check');
