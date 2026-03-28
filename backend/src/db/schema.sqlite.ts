@@ -1,4 +1,16 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, customType } from 'drizzle-orm/sqlite-core';
+
+const blobType = customType<{ data: Buffer; driverData: Buffer }>({
+  dataType() {
+    return 'blob';
+  },
+  toDriver(val: Buffer): Buffer {
+    return val;
+  },
+  fromDriver(val: Buffer): Buffer {
+    return val;
+  },
+});
 
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
@@ -27,5 +39,7 @@ export const pings = sqliteTable('pings', {
   userAgent: text('user_agent'),
   scheme: text('scheme'),
   method: text('method'),
+  payload: blobType('payload'),
+  mimeType: text('mime_type'),
   createdAt: text('created_at').notNull()
 });

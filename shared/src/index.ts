@@ -46,6 +46,8 @@ export const PingSchema = z.object({
   userAgent: z.string().nullable(),
   scheme: z.string().nullable(),
   method: z.string().nullable(),
+  hasPayload: z.boolean(),
+  mimeType: z.string().nullable(),
   createdAt: z.string().datetime()
 });
 

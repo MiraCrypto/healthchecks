@@ -1,4 +1,19 @@
-import { pgTable, text, integer, timestamp, varchar, uuid, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, timestamp, varchar, uuid, boolean, customType } from 'drizzle-orm/pg-core';
+
+const bytea = customType<{ data: Buffer; driverData: string }>({
+  dataType() {
+    return 'bytea';
+  },
+  toDriver(val: Buffer): string {
+    return '\\x' + val.toString('hex');
+  },
+  fromDriver(val: string): Buffer {
+    if (typeof val === 'string' && val.startsWith('\\x')) {
+      return Buffer.from(val.slice(2), 'hex');
+    }
+    return Buffer.from(val as any);
+  },
+});
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey(),
@@ -27,5 +42,7 @@ export const pings = pgTable('pings', {
   userAgent: text('user_agent'),
   scheme: varchar('scheme', { length: 10 }),
   method: varchar('method', { length: 10 }),
+  payload: bytea('payload'),
+  mimeType: text('mime_type'),
   createdAt: timestamp('created_at').notNull().defaultNow()
 });

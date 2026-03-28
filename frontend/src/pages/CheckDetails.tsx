@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Heading, Card, Text, Badge, Button, Flex, Table, Box } from '@radix-ui/themes';
 import { Check, Ping } from '@healthchecks/shared';
 import { format, formatDistanceToNow } from 'date-fns';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2, FileText } from 'lucide-react';
 
 export default function CheckDetails() {
   const { id } = useParams<{ id: string }>();
@@ -119,12 +119,13 @@ export default function CheckDetails() {
             <Table.ColumnHeaderCell>Relative</Table.ColumnHeaderCell>
             <Table.ColumnHeaderCell>Remote IP</Table.ColumnHeaderCell>
             <Table.ColumnHeaderCell>Method</Table.ColumnHeaderCell>
+            <Table.ColumnHeaderCell>Payload</Table.ColumnHeaderCell>
           </Table.Row>
         </Table.Header>
         <Table.Body>
           {pings.length === 0 && (
             <Table.Row>
-              <Table.Cell colSpan={4} style={{ textAlign: 'center' }}>
+              <Table.Cell colSpan={5} style={{ textAlign: 'center' }}>
                 <Text color="gray">No pings received yet.</Text>
               </Table.Cell>
             </Table.Row>
@@ -135,6 +136,15 @@ export default function CheckDetails() {
               <Table.Cell>{formatDistanceToNow(new Date(ping.createdAt), { addSuffix: true })}</Table.Cell>
               <Table.Cell>{ping.remoteIp || 'Unknown'}</Table.Cell>
               <Table.Cell><Badge color="blue">{ping.method || 'GET'}</Badge></Table.Cell>
+              <Table.Cell>
+                {ping.hasPayload ? (
+                  <Button variant="soft" size="1" onClick={() => window.open(`/ping/payload/${ping.id}`, '_blank')}>
+                    <FileText size={14} /> View Payload
+                  </Button>
+                ) : (
+                  <Text color="gray" size="2">-</Text>
+                )}
+              </Table.Cell>
             </Table.Row>
           ))}
         </Table.Body>

@@ -28,7 +28,7 @@ if (DB_DIALECT === 'sqlite') {
 // REPOSITORIES (Abstracting the dialect differences)
 // ============================================================================
 
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 
 export const checkRepo = {
   async findAll(userId: string): Promise<Check[]> {
@@ -92,30 +92,65 @@ export const checkRepo = {
 };
 
 export const pingRepo = {
-  async insert(data: Ping): Promise<void> {
+  async insert(data: Omit<Ping, 'hasPayload'> & { payload?: Buffer; mimeType?: string; hasPayload?: boolean }): Promise<void> {
+    const insertData = { ...data, payload: data.payload || null, mimeType: data.mimeType || null };
+    delete (insertData as any).hasPayload; // Ensure we don't try to insert the frontend-only field
+
     if (sqliteDb) {
-      await sqliteDb.insert(sqliteSchema.pings).values(data);
+      await sqliteDb.insert(sqliteSchema.pings).values(insertData as any);
       return;
     }
-    await pgDb!.insert(pgSchema.pings).values({ ...data, createdAt: new Date(data.createdAt) as any });
+    await pgDb!.insert(pgSchema.pings).values({ ...insertData, createdAt: new Date(insertData.createdAt) as any });
   },
 
   async findByCheckId(checkId: string, limit: number = 50): Promise<Ping[]> {
     if (sqliteDb) {
-      return (await sqliteDb
-        .select()
+      const rows = await sqliteDb
+        .select({
+          id: sqliteSchema.pings.id,
+          checkId: sqliteSchema.pings.checkId,
+          remoteIp: sqliteSchema.pings.remoteIp,
+          userAgent: sqliteSchema.pings.userAgent,
+          scheme: sqliteSchema.pings.scheme,
+          method: sqliteSchema.pings.method,
+          createdAt: sqliteSchema.pings.createdAt,
+          mimeType: sqliteSchema.pings.mimeType,
+          hasPayload: sql<boolean>`${sqliteSchema.pings.payload} IS NOT NULL`
+        })
         .from(sqliteSchema.pings)
         .where(eq(sqliteSchema.pings.checkId, checkId))
         .orderBy(desc(sqliteSchema.pings.createdAt))
-        .limit(limit)) as Ping[];
+        .limit(limit);
+      return rows.map(r => ({ ...r, hasPayload: !!r.hasPayload })) as Ping[];
     }
     const res = await pgDb!
-      .select()
+      .select({
+          id: pgSchema.pings.id,
+          checkId: pgSchema.pings.checkId,
+          remoteIp: pgSchema.pings.remoteIp,
+          userAgent: pgSchema.pings.userAgent,
+          scheme: pgSchema.pings.scheme,
+          method: pgSchema.pings.method,
+          createdAt: pgSchema.pings.createdAt,
+          mimeType: pgSchema.pings.mimeType,
+          hasPayload: sql<boolean>`${pgSchema.pings.payload} IS NOT NULL`
+      })
       .from(pgSchema.pings)
       .where(eq(pgSchema.pings.checkId, checkId))
       .orderBy(desc(pgSchema.pings.createdAt))
       .limit(limit);
-    return res.map(r => ({ ...r, createdAt: (r.createdAt as any).toISOString() })) as Ping[];
+    return res.map(r => ({ ...r, createdAt: (r.createdAt as any).toISOString(), hasPayload: !!r.hasPayload })) as Ping[];
+  },
+
+  async findPayloadById(id: string): Promise<{ payload: Buffer | null, mimeType: string | null } | null> {
+    if (sqliteDb) {
+      const res = await sqliteDb.select({ payload: sqliteSchema.pings.payload, mimeType: sqliteSchema.pings.mimeType })
+        .from(sqliteSchema.pings).where(eq(sqliteSchema.pings.id, id)).limit(1);
+      return res[0] || null;
+    }
+    const res = await pgDb!.select({ payload: pgSchema.pings.payload, mimeType: pgSchema.pings.mimeType })
+      .from(pgSchema.pings).where(eq(pgSchema.pings.id, id)).limit(1);
+    return res[0] || null;
   }
 };
 
