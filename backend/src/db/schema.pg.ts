@@ -19,6 +19,9 @@ export const users = pgTable('users', {
   id: uuid('id').primaryKey(),
   username: varchar('username', { length: 255 }).notNull().unique(),
   passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+  role: varchar('role', { length: 20 }).notNull().default('USER'),
+  displayName: varchar('display_name', { length: 100 }),
+  description: text('description'),
   createdAt: timestamp('created_at', { mode: 'string' }).notNull().defaultNow()
 });
 

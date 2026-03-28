@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken';
 import authRoutes from './routes/auth.js';
 import checkRoutes from './routes/checks.js';
 import pingRoutes from './routes/ping.js';
+import userRoutes from './routes/users.js';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -47,6 +48,7 @@ async function buildServer() {
   fastify.register(authRoutes, { prefix: '/api/auth' });
   fastify.register(checkRoutes, { prefix: '/api/checks' });
   fastify.register(pingRoutes, { prefix: '/ping' });
+  fastify.register(userRoutes, { prefix: '/api/users' });
 
   return fastify;
 }

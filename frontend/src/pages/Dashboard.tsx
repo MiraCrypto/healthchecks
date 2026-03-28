@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Heading, Table, Badge, Button, Flex, Text, Dialog, TextField } from '@radix-ui/themes';
 import { Check } from '@healthchecks/shared';
 import { formatDistanceToNow } from 'date-fns';
-import { Plus, RefreshCw, LogOut } from 'lucide-react';
+import { Plus, RefreshCw, LogOut, Settings as SettingsIcon, Shield } from 'lucide-react';
 
 export default function Dashboard() {
   const [checks, setChecks] = useState<Check[]>([]);
-  const [user, setUser] = useState<{ id: string, username: string } | null>(null);
+  const [user, setUser] = useState<{ id: string, username: string, role?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -70,7 +70,19 @@ export default function Dashboard() {
       <Flex justify="between" align="center" mb="6">
         <Heading size="8">Checks</Heading>
         <Flex gap="3" align="center">
-          {user && <Text size="2" color="gray" mr="2">Welcome, <strong>{user.username}</strong></Text>}
+          {user && (
+            <Text size="2" color="gray" mr="2">
+              Welcome, <a href={`/u/${user.username}`} style={{ textDecoration: 'none', color: 'inherit' }}><strong>{user.username}</strong></a>
+            </Text>
+          )}
+          {user?.role === 'ADMIN' && (
+            <Button variant="soft" color="indigo" onClick={() => navigate('/admin')}>
+              <Shield size={16} /> Admin
+            </Button>
+          )}
+          <Button variant="soft" color="gray" onClick={() => navigate('/settings')}>
+            <SettingsIcon size={16} /> Settings
+          </Button>
           <Button variant="soft" onClick={loadChecks} disabled={loading}>
             <RefreshCw size={16} /> Refresh
           </Button>

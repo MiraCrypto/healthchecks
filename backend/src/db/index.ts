@@ -155,6 +155,13 @@ export const pingRepo = {
 };
 
 export const userRepo = {
+  async findAll(): Promise<User[]> {
+    if (sqliteDb) {
+      return (await sqliteDb.select().from(sqliteSchema.users)) as User[];
+    }
+    return (await pgDb!.select().from(pgSchema.users)) as unknown as User[];
+  },
+
   async findByUsername(username: string): Promise<User | null> {
     if (sqliteDb) {
       const res = await sqliteDb.select().from(sqliteSchema.users).where(eq(sqliteSchema.users.username, username)).limit(1);
@@ -164,11 +171,37 @@ export const userRepo = {
     return (res[0] as unknown as User) || null;
   },
 
+  async findById(id: string): Promise<User | null> {
+    if (sqliteDb) {
+      const res = await sqliteDb.select().from(sqliteSchema.users).where(eq(sqliteSchema.users.id, id)).limit(1);
+      return (res[0] as User) || null;
+    }
+    const res = await pgDb!.select().from(pgSchema.users).where(eq(pgSchema.users.id, id)).limit(1);
+    return (res[0] as unknown as User) || null;
+  },
+
   async insert(data: any): Promise<void> {
     if (sqliteDb) {
       await sqliteDb.insert(sqliteSchema.users).values(data);
       return;
     }
     await pgDb!.insert(pgSchema.users).values({ ...data, createdAt: new Date(data.createdAt) as any });
+  },
+
+  async update(id: string, data: Partial<User> & { passwordHash?: string }): Promise<void> {
+    if (sqliteDb) {
+      await sqliteDb.update(sqliteSchema.users).set(data).where(eq(sqliteSchema.users.id, id));
+      return;
+    }
+    await pgDb!.update(pgSchema.users).set(data).where(eq(pgSchema.users.id, id));
+  },
+
+  async count(): Promise<number> {
+    if (sqliteDb) {
+      const res = await sqliteDb.select({ count: sql`count(*)` }).from(sqliteSchema.users);
+      return Number(res[0].count);
+    }
+    const res = await pgDb!.select({ count: sql`count(*)` }).from(pgSchema.users);
+    return Number(res[0].count);
   }
 };

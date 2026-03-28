@@ -20,17 +20,25 @@ export default async function authRoutes(fastify: FastifyInstance) {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+
+    // Make the first user an admin
+    const isFirstUser = await userRepo.count() === 0;
+    const role = isFirstUser ? 'ADMIN' : 'USER';
+
     const newUser = {
       id: crypto.randomUUID(),
       username,
       passwordHash,
+      role,
+      displayName: null,
+      description: null,
       createdAt: new Date().toISOString()
     };
 
     await userRepo.insert(newUser);
 
     const token = jwt.sign(
-      { username, id: newUser.id },
+      { username, id: newUser.id, role },
       process.env.JWT_SECRET || 'supersecret123',
       { expiresIn: '7d' }
     );
@@ -67,7 +75,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
     }
 
     const token = jwt.sign(
-      { username, id: user.id },
+      { username, id: user.id, role: user.role },
       process.env.JWT_SECRET || 'supersecret123',
       { expiresIn: '7d' }
     );
@@ -89,8 +97,18 @@ export default async function authRoutes(fastify: FastifyInstance) {
   });
 
   fastify.get('/me', async (request, reply) => {
-    const user = (request as any).user;
+    const userToken = (request as any).user;
+    if (!userToken) return reply.status(401).send({ error: 'Unauthorized' });
+    const user = await userRepo.findByUsername(userToken.username);
     if (!user) return reply.status(401).send({ error: 'Unauthorized' });
-    return reply.send({ id: user.id, username: user.username });
+
+    return reply.send({
+      id: user.id,
+      username: user.username,
+      role: user.role,
+      displayName: user.displayName,
+      description: user.description,
+      createdAt: user.createdAt
+    });
   });
 }
