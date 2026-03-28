@@ -141,10 +141,10 @@ export default function CheckDetails() {
 
       <Card size="4" mb="6">
         <Flex justify="between" align="center" mb="4">
-          <Box>
+          <Box style={{ flex: 1, marginRight: 'var(--space-4)' }}>
             <Heading size="7">{check.name}</Heading>
             {check.description && (
-              <Text as="p" size="3" color="gray" mt="2">{check.description}</Text>
+              <Text as="p" size="3" color="gray" mt="2" style={{ whiteSpace: 'pre-wrap' }}>{check.description}</Text>
             )}
           </Box>
           <Flex gap="3" align="center">
