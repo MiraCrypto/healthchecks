@@ -31,14 +31,24 @@ if (DB_DIALECT === 'sqlite') {
 import { eq, and, desc } from 'drizzle-orm';
 
 export const checkRepo = {
-  async findAll(): Promise<Check[]> {
+  async findAll(userId: string): Promise<Check[]> {
     if (sqliteDb) {
-      return (await sqliteDb.select().from(sqliteSchema.checks)) as Check[];
+      return (await sqliteDb.select().from(sqliteSchema.checks).where(eq(sqliteSchema.checks.userId, userId))) as Check[];
     }
-    return (await pgDb!.select().from(pgSchema.checks)) as Check[];
+    return (await pgDb!.select().from(pgSchema.checks).where(eq(pgSchema.checks.userId, userId))) as Check[];
   },
 
-  async findById(id: string): Promise<Check | null> {
+  async findById(id: string, userId: string): Promise<Check | null> {
+    if (sqliteDb) {
+      const res = await sqliteDb.select().from(sqliteSchema.checks).where(and(eq(sqliteSchema.checks.id, id), eq(sqliteSchema.checks.userId, userId))).limit(1);
+      return (res[0] as Check) || null;
+    }
+    const res = await pgDb!.select().from(pgSchema.checks).where(and(eq(pgSchema.checks.id, id), eq(pgSchema.checks.userId, userId))).limit(1);
+    return (res[0] as Check) || null;
+  },
+
+  // NOTE: This internal function is needed by ping route which operates without authentication
+  async findByIdUnscoped(id: string): Promise<Check | null> {
     if (sqliteDb) {
       const res = await sqliteDb.select().from(sqliteSchema.checks).where(eq(sqliteSchema.checks.id, id)).limit(1);
       return (res[0] as Check) || null;
@@ -55,7 +65,16 @@ export const checkRepo = {
     await pgDb!.insert(pgSchema.checks).values(data);
   },
 
-  async update(id: string, data: Partial<Check>): Promise<void> {
+  async update(id: string, userId: string, data: Partial<Check>): Promise<void> {
+    if (sqliteDb) {
+      await sqliteDb.update(sqliteSchema.checks).set(data).where(and(eq(sqliteSchema.checks.id, id), eq(sqliteSchema.checks.userId, userId)));
+      return;
+    }
+    await pgDb!.update(pgSchema.checks).set(data).where(and(eq(pgSchema.checks.id, id), eq(pgSchema.checks.userId, userId)));
+  },
+
+  // Internal method for ping route
+  async updateUnscoped(id: string, data: Partial<Check>): Promise<void> {
     if (sqliteDb) {
       await sqliteDb.update(sqliteSchema.checks).set(data).where(eq(sqliteSchema.checks.id, id));
       return;
@@ -63,12 +82,12 @@ export const checkRepo = {
     await pgDb!.update(pgSchema.checks).set(data).where(eq(pgSchema.checks.id, id));
   },
 
-  async delete(id: string): Promise<void> {
+  async delete(id: string, userId: string): Promise<void> {
     if (sqliteDb) {
-      await sqliteDb.delete(sqliteSchema.checks).where(eq(sqliteSchema.checks.id, id));
+      await sqliteDb.delete(sqliteSchema.checks).where(and(eq(sqliteSchema.checks.id, id), eq(sqliteSchema.checks.userId, userId)));
       return;
     }
-    await pgDb!.delete(pgSchema.checks).where(eq(pgSchema.checks.id, id));
+    await pgDb!.delete(pgSchema.checks).where(and(eq(pgSchema.checks.id, id), eq(pgSchema.checks.userId, userId)));
   }
 };
 
@@ -108,5 +127,13 @@ export const userRepo = {
     }
     const res = await pgDb!.select().from(pgSchema.users).where(eq(pgSchema.users.username, username)).limit(1);
     return (res[0] as unknown as User) || null;
+  },
+
+  async insert(data: any): Promise<void> {
+    if (sqliteDb) {
+      await sqliteDb.insert(sqliteSchema.users).values(data);
+      return;
+    }
+    await pgDb!.insert(pgSchema.users).values({ ...data, createdAt: new Date(data.createdAt) as any });
   }
 };

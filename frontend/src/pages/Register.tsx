@@ -1,45 +1,43 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Container, Card, Heading, Text, TextField, Button, Flex } from '@radix-ui/themes';
 
-import { Link } from 'react-router-dom';
-
-export default function Login() {
+export default function Register() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Login failed');
+        throw new Error(data.error || 'Registration failed');
       }
       navigate('/');
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      setError(err.message || 'Registration failed');
     }
   };
 
   return (
     <Container size="1" style={{ paddingTop: '10vh' }}>
       <Card size="4">
-        <Heading size="6" mb="4" align="center">Healthchecks</Heading>
-        <form onSubmit={handleLogin}>
+        <Heading size="6" mb="4" align="center">Healthchecks - Register</Heading>
+        <form onSubmit={handleRegister}>
           <Flex direction="column" gap="3">
             <TextField.Root placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
             <TextField.Root type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
             {error && <Text color="red" size="2">{error}</Text>}
-            <Button size="3" type="submit">Sign In</Button>
+            <Button size="3" type="submit">Sign Up</Button>
             <Text align="center" size="2" color="gray">
-              Don't have an account? <Link to="/register">Sign Up</Link>
+              Already have an account? <Link to="/login">Sign In</Link>
             </Text>
           </Flex>
         </form>

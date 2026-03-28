@@ -9,6 +9,7 @@ export const users = sqliteTable('users', {
 
 export const checks = sqliteTable('checks', {
   id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   slug: text('slug').notNull(),
   tags: text('tags'),

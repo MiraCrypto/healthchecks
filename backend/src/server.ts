@@ -28,8 +28,8 @@ async function buildServer() {
     // Skip auth for ping routes
     if (request.url.startsWith('/ping')) return;
 
-    // Skip auth for login
-    if (request.url === '/api/auth/login' && request.method === 'POST') return;
+    // Skip auth for login/register
+    if ((request.url === '/api/auth/login' || request.url === '/api/auth/register') && request.method === 'POST') return;
 
     try {
       const token = (request as any).cookies.auth_token;

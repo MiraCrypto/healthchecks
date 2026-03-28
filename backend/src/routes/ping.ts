@@ -7,7 +7,7 @@ export default async function pingRoutes(fastify: FastifyInstance) {
   const handlePing = async (request: any, reply: any) => {
     const { uuid } = request.params as { uuid: string };
 
-    const check = await checkRepo.findById(uuid);
+    const check = await checkRepo.findByIdUnscoped(uuid);
     if (!check) {
       return reply.status(404).send('Not Found');
     }
@@ -26,7 +26,7 @@ export default async function pingRoutes(fastify: FastifyInstance) {
     });
 
     // Update the check status
-    await checkRepo.update(uuid, {
+    await checkRepo.updateUnscoped(uuid, {
       lastPing: now,
       status: 'UP'
     });

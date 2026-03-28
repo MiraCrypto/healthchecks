@@ -13,6 +13,7 @@ export type CheckStatus = z.infer<typeof CheckStatusSchema>;
 
 export const CheckSchema = z.object({
   id: z.string().uuid(),
+  userId: z.string().uuid(),
   name: z.string().min(1).max(100),
   slug: z.string().min(1).max(100),
   tags: z.string().optional(), // Comma separated tags
@@ -27,6 +28,7 @@ export type Check = z.infer<typeof CheckSchema>;
 
 export const CreateCheckSchema = z.object({
   name: z.string().min(1).max(100),
+  userId: z.string().uuid().optional(), // Will be injected by backend
   tags: z.string().optional(),
   intervalSeconds: z.number().int().min(60),
   graceSeconds: z.number().int().min(60),
