@@ -39,6 +39,7 @@ export default async function checkRoutes(fastify: FastifyInstance) {
       userId,
       name: data.name,
       slug: data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      description: data.description || null,
       tags: data.tags || undefined,
       intervalSeconds: data.intervalSeconds,
       graceSeconds: data.graceSeconds,

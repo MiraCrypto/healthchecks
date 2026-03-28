@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Heading, Table, Badge, Button, Flex, Text, Dialog, TextField } from '@radix-ui/themes';
 import { Check } from '@healthchecks/shared';
 import { formatDistanceToNow } from 'date-fns';
-import { Plus, RefreshCw, LogOut, Settings as SettingsIcon, Shield } from 'lucide-react';
+import { Plus, RefreshCw, LogOut, Settings as SettingsIcon, Shield, Edit2 } from 'lucide-react';
+import { TextArea } from '@radix-ui/themes';
 
 export default function Dashboard() {
   const [checks, setChecks] = useState<Check[]>([]);
@@ -113,7 +114,14 @@ export default function Dashboard() {
           )}
           {checks.map(check => (
             <Table.Row key={check.id} align="center">
-              <Table.RowHeaderCell>{check.name}</Table.RowHeaderCell>
+              <Table.RowHeaderCell>
+                <Flex direction="column">
+                  <Text>{check.name}</Text>
+                  {check.description && (
+                    <Text size="1" color="gray" mt="1">{check.description}</Text>
+                  )}
+                </Flex>
+              </Table.RowHeaderCell>
               <Table.Cell>
                 <Badge color={getStatusColor(check.status)}>{check.status}</Badge>
               </Table.Cell>
@@ -122,9 +130,16 @@ export default function Dashboard() {
               </Table.Cell>
               <Table.Cell>{(check.intervalSeconds / 60).toFixed(0)} min</Table.Cell>
               <Table.Cell>
-                <Button variant="outline" size="1" onClick={() => navigate(`/checks/${check.id}`)}>
-                  Details
-                </Button>
+                <Flex gap="2">
+                  <Button variant="outline" size="1" onClick={() => navigate(`/checks/${check.id}`)}>
+                    Details
+                  </Button>
+                  <EditCheckDialog check={check} onUpdated={loadChecks}>
+                    <Button variant="soft" color="gray" size="1">
+                      <Edit2 size={14} /> Edit
+                    </Button>
+                  </EditCheckDialog>
+                </Flex>
               </Table.Cell>
             </Table.Row>
           ))}
@@ -134,23 +149,106 @@ export default function Dashboard() {
   );
 }
 
+export function EditCheckDialog({ check, onUpdated, children }: { check: Check, onUpdated: () => void, children: React.ReactNode }) {
+  const [name, setName] = useState(check.name);
+  const [description, setDescription] = useState(check.description || '');
+  const [intervalMin, setIntervalMin] = useState(Math.floor(check.intervalSeconds / 60));
+  const [graceMin, setGraceMin] = useState(Math.floor(check.graceSeconds / 60));
+
+  const handleSubmit = async () => {
+    if (!name.trim()) return;
+    try {
+      const res = await fetch(`/api/checks/${check.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          description: description.trim() || null,
+          intervalSeconds: intervalMin * 60,
+          graceSeconds: graceMin * 60
+        })
+      });
+      if (!res.ok) {
+        throw new Error('Failed to update check');
+      }
+      onUpdated();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update check');
+    }
+  };
+
+  return (
+    <Dialog.Root>
+      <Dialog.Trigger>
+        {children}
+      </Dialog.Trigger>
+      <Dialog.Content style={{ maxWidth: 450 }}>
+        <Dialog.Title>Edit Check</Dialog.Title>
+        <Dialog.Description size="2" mb="4">
+          Update the settings for this check.
+        </Dialog.Description>
+
+        <Flex direction="column" gap="3">
+          <label>
+            <Text as="div" size="2" mb="1" weight="bold">Name</Text>
+            <TextField.Root value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Database Backup" />
+          </label>
+          <label>
+            <Text as="div" size="2" mb="1" weight="bold">Description (optional)</Text>
+            <TextArea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description of this check" />
+          </label>
+          <label>
+            <Text as="div" size="2" mb="1" weight="bold">Interval (minutes)</Text>
+            <TextField.Root type="number" min="1" value={intervalMin} onChange={(e) => setIntervalMin(parseInt(e.target.value) || 1)} />
+          </label>
+          <label>
+            <Text as="div" size="2" mb="1" weight="bold">Grace Period (minutes)</Text>
+            <TextField.Root type="number" min="1" value={graceMin} onChange={(e) => setGraceMin(parseInt(e.target.value) || 1)} />
+          </label>
+        </Flex>
+
+        <Flex gap="3" mt="4" justify="end">
+          <Dialog.Close>
+            <Button variant="soft" color="gray">Cancel</Button>
+          </Dialog.Close>
+          <Dialog.Close>
+            <Button onClick={handleSubmit}>Save Changes</Button>
+          </Dialog.Close>
+        </Flex>
+      </Dialog.Content>
+    </Dialog.Root>
+  );
+}
+
 function CreateCheckDialog({ onCreated }: { onCreated: () => void }) {
   const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [intervalMin, setIntervalMin] = useState(60);
 
   const handleSubmit = async () => {
     if (!name.trim()) return;
-    await fetch('/api/checks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name,
-        intervalSeconds: intervalMin * 60,
-        graceSeconds: Math.floor(intervalMin * 60 * 0.2) // 20% grace period by default
-      })
-    });
-    setName('');
-    onCreated();
+    try {
+      const res = await fetch('/api/checks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          description: description.trim() || null,
+          intervalSeconds: intervalMin * 60,
+          graceSeconds: Math.floor(intervalMin * 60 * 0.2) // 20% grace period by default
+        })
+      });
+      if (!res.ok) {
+        throw new Error('Failed to create check');
+      }
+      setName('');
+      setDescription('');
+      onCreated();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to create check');
+    }
   };
 
   return (
@@ -168,6 +266,10 @@ function CreateCheckDialog({ onCreated }: { onCreated: () => void }) {
           <label>
             <Text as="div" size="2" mb="1" weight="bold">Name</Text>
             <TextField.Root value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Database Backup" />
+          </label>
+          <label>
+            <Text as="div" size="2" mb="1" weight="bold">Description (optional)</Text>
+            <TextArea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description of this check" />
           </label>
           <label>
             <Text as="div" size="2" mb="1" weight="bold">Interval (minutes)</Text>

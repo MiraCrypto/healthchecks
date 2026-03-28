@@ -30,6 +30,7 @@ export const checks = pgTable('checks', {
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 255 }).notNull(),
   slug: varchar('slug', { length: 255 }).notNull(),
+  description: text('description'),
   tags: text('tags'),
   intervalSeconds: integer('interval_seconds').notNull(),
   graceSeconds: integer('grace_seconds').notNull(),

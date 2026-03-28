@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Heading, Card, Text, Badge, Button, Flex, Table, Box, Dialog, ScrollArea, Code } from '@radix-ui/themes';
 import { Check, Ping } from '@healthchecks/shared';
 import { format, formatDistanceToNow } from 'date-fns';
-import { ArrowLeft, Trash2, FileText, Copy, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Trash2, FileText, Copy, ExternalLink, Edit2 } from 'lucide-react';
+import { EditCheckDialog } from './Dashboard';
 
 function PayloadViewer({ pingId }: { pingId: string }) {
   const [content, setContent] = useState<string>('');
@@ -140,9 +141,19 @@ export default function CheckDetails() {
 
       <Card size="4" mb="6">
         <Flex justify="between" align="center" mb="4">
-          <Heading size="7">{check.name}</Heading>
+          <Box>
+            <Heading size="7">{check.name}</Heading>
+            {check.description && (
+              <Text as="p" size="3" color="gray" mt="2">{check.description}</Text>
+            )}
+          </Box>
           <Flex gap="3" align="center">
             <Badge size="2" color={getStatusColor(check.status)}>{check.status}</Badge>
+            <EditCheckDialog check={check} onUpdated={loadData}>
+              <Button variant="soft" color="gray">
+                <Edit2 size={16} /> Edit
+              </Button>
+            </EditCheckDialog>
             <Button color="red" variant="soft" onClick={handleDelete}>
               <Trash2 size={16} /> Delete
             </Button>
