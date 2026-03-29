@@ -6,6 +6,7 @@ import cookie from '@fastify/cookie';
 import jwt from 'jsonwebtoken';
 import authRoutes from './routes/auth.js';
 import checkRoutes from './routes/checks.js';
+import payloadRoutes from './routes/payload.js';
 import pingRoutes from './routes/ping.js';
 import userRoutes from './routes/users.js';
 import * as dotenv from 'dotenv';
@@ -26,8 +27,8 @@ async function buildServer() {
   // Authentication Hook (Minimal JWT verify)
   fastify.decorateRequest('user', null);
   fastify.addHook('preHandler', async (request, reply) => {
-    // Skip auth for ping routes
-    if (request.url.startsWith('/ping')) return;
+    // Skip auth for ping routes and payloads
+    if (request.url.startsWith('/ping') || request.url.startsWith('/payload')) return;
 
     // Skip auth for login/register
     if ((request.url === '/api/auth/login' || request.url === '/api/auth/register') && request.method === 'POST') return;
@@ -47,6 +48,7 @@ async function buildServer() {
 
   fastify.register(authRoutes, { prefix: '/api/auth' });
   fastify.register(checkRoutes, { prefix: '/api/checks' });
+  fastify.register(payloadRoutes, { prefix: '/payload' });
   fastify.register(pingRoutes, { prefix: '/ping' });
   fastify.register(userRoutes, { prefix: '/api/users' });
 

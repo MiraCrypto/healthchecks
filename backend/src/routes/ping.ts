@@ -51,18 +51,4 @@ export default async function pingRoutes(fastify: FastifyInstance) {
 
   fastify.get('/:uuid', handlePing);
   fastify.post('/:uuid', handlePing);
-
-  fastify.get('/payload/:pingId', async (request: any, reply: any) => {
-    const { pingId } = request.params as { pingId: string };
-    const result = await pingRepo.findPayloadById(pingId);
-
-    if (!result || !result.payload) {
-      return reply.status(404).send('Payload Not Found');
-    }
-
-    reply.header('Content-Type', result.mimeType || 'application/octet-stream');
-    reply.header('Content-Security-Policy', "default-src 'none'");
-    reply.header('X-Content-Type-Options', 'nosniff');
-    return reply.send(result.payload);
-  });
 }

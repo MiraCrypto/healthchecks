@@ -19,7 +19,7 @@ function PayloadViewer({ pingId }: { pingId: string }) {
       setLoading(true);
       setError('');
       try {
-        const res = await fetch(`/ping/payload/${pingId}`);
+        const res = await fetch(`/payload/${pingId}`);
         if (!res.ok) {
           throw new Error('Failed to load payload');
         }
@@ -237,14 +237,14 @@ export default function CheckDetails() {
                 <Button
                   variant="soft"
                   color="blue"
-                  onClick={() => navigator.clipboard.writeText(`${window.location.origin}/ping/payload/${selectedPingForPayload.id}`)}
+                  onClick={() => navigator.clipboard.writeText(`${window.location.origin}/payload/${selectedPingForPayload.id}`)}
                 >
                   <Copy size={16} /> Copy Permlink
                 </Button>
                 <Button
                   variant="soft"
                   color="gray"
-                  onClick={() => window.open(`/ping/payload/${selectedPingForPayload.id}`, '_blank')}
+                  onClick={() => window.open(`/payload/${selectedPingForPayload.id}`, '_blank')}
                 >
                   <ExternalLink size={16} /> Open in New Tab
                 </Button>

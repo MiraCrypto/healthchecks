@@ -6,7 +6,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': 'http://localhost:3000',
-      '/ping': 'http://localhost:3000'
+      '/ping': 'http://localhost:3000',
+      '/payload': 'http://localhost:3000'
     }
   }
 });
