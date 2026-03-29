@@ -38,7 +38,6 @@ export default async function checkRoutes(fastify: FastifyInstance) {
       id: crypto.randomUUID(),
       userId,
       name: data.name,
-      slug: data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
       description: data.description || null,
       tags: data.tags || undefined,
       intervalSeconds: data.intervalSeconds,
@@ -59,9 +58,6 @@ export default async function checkRoutes(fastify: FastifyInstance) {
     if (!parseRes.success) return reply.status(400).send({ error: parseRes.error.issues });
 
     const updateData: any = { ...parseRes.data };
-    if (updateData.name) {
-      updateData.slug = updateData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    }
     // Convert undefined to null for description to ensure it gets cleared if empty
     if ('description' in updateData && updateData.description === undefined) {
       updateData.description = null;

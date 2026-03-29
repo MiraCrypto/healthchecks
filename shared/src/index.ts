@@ -45,7 +45,6 @@ export const CheckSchema = z.object({
   id: z.string().uuid(),
   userId: z.string().uuid(),
   name: z.string().min(1).max(100),
-  slug: z.string().min(1).max(100),
   description: z.string().max(1000).nullable().optional(),
   tags: z.string().optional(), // Comma separated tags
   intervalSeconds: z.number().int().min(60), // Minimum 1 minute

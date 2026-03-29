@@ -26,7 +26,6 @@ export const checks = sqliteTable('checks', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
-  slug: text('slug').notNull(),
   description: text('description'),
   tags: text('tags'),
   intervalSeconds: integer('interval_seconds').notNull(),
