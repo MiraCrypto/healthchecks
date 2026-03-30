@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Heading, Flex, Button, TextField, Text, TextArea, Callout } from '@radix-ui/themes';
 import { ArrowLeft, Check, AlertCircle } from 'lucide-react';
+import { ApiClient } from '../api/ApiClient.js';
 
 export default function Settings() {
   const [displayName, setDisplayName] = useState('');
@@ -17,41 +18,32 @@ export default function Settings() {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const res = await fetch('/api/auth/me');
-        if (!res.ok) {
-          navigate('/login');
-          return;
-        }
-        const data = await res.json();
+        const data = await ApiClient.getMe();
         setDisplayName(data.displayName || '');
         setDescription(data.description || '');
       } catch (err) {
-        console.error(err);
+        if ((err as Error).message === 'Unauthorized' || (err as Error).message.includes('401')) {
+          navigate('/login');
+        } else {
+          console.error(err);
+        }
       }
     };
     loadUser();
   }, [navigate]);
 
-  const handleUpdateProfile = async (e: React.FormEvent) => {
+  const handleUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setProfileMessage(null);
     try {
-      const res = await fetch('/api/users/me', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ displayName, description })
-      });
-      if (!res.ok) {
-        setProfileMessage({ type: 'error', text: 'Failed to update profile' });
-        return;
-      }
+      await ApiClient.updateProfile({ displayName: displayName.trim() || null, description: description.trim() || null });
       setProfileMessage({ type: 'success', text: 'Profile updated successfully' });
     } catch (err) {
-      setProfileMessage({ type: 'error', text: 'Network error' });
+      setProfileMessage({ type: 'error', text: (err as Error).message || 'Failed to update profile' });
     }
   };
 
-  const handleChangePassword = async (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setPasswordMessage(null);
     if (!currentPassword || !newPassword) {
@@ -64,21 +56,12 @@ export default function Settings() {
     }
 
     try {
-      const res = await fetch('/api/users/me/password', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPassword, newPassword })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setPasswordMessage({ type: 'error', text: data.error || 'Failed to change password' });
-        return;
-      }
+      await ApiClient.changePassword({ currentPassword, newPassword });
       setPasswordMessage({ type: 'success', text: 'Password changed successfully' });
       setCurrentPassword('');
       setNewPassword('');
     } catch (err) {
-      setPasswordMessage({ type: 'error', text: 'Network error' });
+      setPasswordMessage({ type: 'error', text: (err as Error).message || 'Failed to change password' });
     }
   };
 

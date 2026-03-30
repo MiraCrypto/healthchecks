@@ -5,6 +5,7 @@ import { Check, Ping } from '@healthchecks/shared';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ArrowLeft, Trash2, FileText, Copy, ExternalLink, Edit2 } from 'lucide-react';
 import { EditCheckDialog } from './Dashboard';
+import { ApiClient } from '../api/ApiClient.js';
 
 function PayloadViewer({ pingId }: { pingId: string }) {
   const [content, setContent] = useState<string>('');
@@ -19,22 +20,17 @@ function PayloadViewer({ pingId }: { pingId: string }) {
       setLoading(true);
       setError('');
       try {
-        const res = await fetch(`/payload/${pingId}`);
-        if (!res.ok) {
-          throw new Error('Failed to load payload');
-        }
-        const ct = res.headers.get('content-type') || '';
+        const { text, contentType: ct } = await ApiClient.getPayloadText(pingId);
         setContentType(ct);
 
         if (ct.includes('text/') || ct.includes('application/json')) {
-          const text = await res.text();
           if (isMounted) setContent(text);
         } else {
           // It's binary or something else we don't want to render as raw text
           if (isMounted) setContent('Binary or unsupported payload format.');
         }
-      } catch (err: any) {
-        if (isMounted) setError(err.message || 'Error loading payload');
+      } catch (err) {
+        if (isMounted) setError((err as Error).message || 'Error loading payload');
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -71,31 +67,28 @@ export default function CheckDetails() {
   const navigate = useNavigate();
   const [check, setCheck] = useState<Check | null>(null);
   const [pings, setPings] = useState<Ping[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [selectedPingForPayload, setSelectedPingForPayload] = useState<Ping | null>(null);
+  const [error, setError] = useState<string>('');
 
   const loadData = async () => {
+    if (!id) return;
     try {
-      const [checkRes, pingsRes] = await Promise.all([
-        fetch(`/api/checks/${id}`),
-        fetch(`/api/checks/${id}/pings`)
+      const [checkData, pingsData] = await Promise.all([
+        ApiClient.getCheck(id),
+        ApiClient.getCheckPings(id)
       ]);
 
-      if (checkRes.status === 401 || pingsRes.status === 401) {
+      setCheck(checkData);
+      setPings(pingsData);
+    } catch (err) {
+      if ((err as Error).message === 'Unauthorized' || (err as Error).message.includes('401')) {
         navigate('/login');
-        return;
-      }
-      if (checkRes.status === 404) {
+      } else if ((err as Error).message.includes('404')) {
         navigate('/');
-        return;
+      } else {
+        console.error(err);
       }
-
-      if (!checkRes.ok || !pingsRes.ok) throw new Error('Failed to load data');
-
-      setCheck(await checkRes.json());
-      setPings(await pingsRes.json());
-    } catch (err: any) {
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -108,13 +101,13 @@ export default function CheckDetails() {
   }, [id]);
 
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this check? This cannot be undone.')) return;
+    if (!id || !window.confirm('Are you sure you want to delete this check? This cannot be undone.')) return;
+    setError('');
     try {
-      const res = await fetch(`/api/checks/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete check');
+      await ApiClient.deleteCheck(id);
       navigate('/');
     } catch (err) {
-      alert('Failed to delete check');
+      setError((err as Error).message || 'Failed to delete check');
     }
   };
 
@@ -148,6 +141,7 @@ export default function CheckDetails() {
             )}
           </Box>
           <Flex gap="3" align="center">
+            {error && <Text color="red" size="2">{error}</Text>}
             <Badge size="2" color={getStatusColor(check.status)}>{check.status}</Badge>
             <EditCheckDialog check={check} onUpdated={loadData}>
               <Button variant="soft" color="gray">

@@ -5,26 +5,26 @@ import { Check } from '@healthchecks/shared';
 import { formatDistanceToNow } from 'date-fns';
 import { Plus, RefreshCw, LogOut, Settings as SettingsIcon, Shield, Edit2 } from 'lucide-react';
 import { TextArea } from '@radix-ui/themes';
+import { User } from '@healthchecks/shared';
+import { ApiClient } from '../api/ApiClient.js';
 
 export default function Dashboard() {
   const [checks, setChecks] = useState<Check[]>([]);
-  const [user, setUser] = useState<{ id: string, username: string, role?: string } | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
   const loadChecks = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/checks');
-      if (res.status === 401) {
-        navigate('/login');
-        return;
-      }
-      if (!res.ok) throw new Error('Failed to load checks');
-      const data = await res.json();
+      const data = await ApiClient.getChecks();
       setChecks(data);
-    } catch (err: any) {
-      console.error(err);
+    } catch (err) {
+      if ((err as Error).message === 'Unauthorized' || (err as Error).message.includes('401')) {
+        navigate('/login');
+      } else {
+        console.error(err);
+      }
     } finally {
       setLoading(false);
     }
@@ -32,10 +32,8 @@ export default function Dashboard() {
 
   const loadUser = async () => {
     try {
-      const res = await fetch('/api/auth/me');
-      if (res.ok) {
-        setUser(await res.json());
-      }
+      const u = await ApiClient.getMe();
+      setUser(u);
     } catch (err) {
       console.error(err);
     }
@@ -43,7 +41,7 @@ export default function Dashboard() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await ApiClient.logout();
       navigate('/login');
     } catch (err) {
       console.error(err);
@@ -150,31 +148,26 @@ export default function Dashboard() {
 }
 
 export function EditCheckDialog({ check, onUpdated, children }: { check: Check, onUpdated: () => void, children: React.ReactNode }) {
-  const [name, setName] = useState(check.name);
-  const [description, setDescription] = useState(check.description || '');
-  const [intervalMin, setIntervalMin] = useState(Math.floor(check.intervalSeconds / 60));
-  const [graceMin, setGraceMin] = useState(Math.floor(check.graceSeconds / 60));
+  const [name, setName] = useState<string>(check.name);
+  const [description, setDescription] = useState<string>(check.description || '');
+  const [intervalMin, setIntervalMin] = useState<number>(Math.floor(check.intervalSeconds / 60));
+  const [graceMin, setGraceMin] = useState<number>(Math.floor(check.graceSeconds / 60));
+  const [error, setError] = useState<string>('');
 
   const handleSubmit = async () => {
     if (!name.trim()) return;
+    setError('');
     try {
-      const res = await fetch(`/api/checks/${check.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          description: description.trim() || null,
-          intervalSeconds: intervalMin * 60,
-          graceSeconds: graceMin * 60
-        })
+      await ApiClient.updateCheck(check.id, {
+        name,
+        description: description.trim() || null,
+        intervalSeconds: intervalMin * 60,
+        graceSeconds: graceMin * 60
       });
-      if (!res.ok) {
-        throw new Error('Failed to update check');
-      }
       onUpdated();
     } catch (err) {
       console.error(err);
-      alert('Failed to update check');
+      setError((err as Error).message || 'Failed to update check');
     }
   };
 
@@ -208,13 +201,12 @@ export function EditCheckDialog({ check, onUpdated, children }: { check: Check, 
           </label>
         </Flex>
 
-        <Flex gap="3" mt="4" justify="end">
+        <Flex gap="3" mt="4" justify="end" align="center">
+          {error && <Text color="red" size="2" mr="auto">{error}</Text>}
           <Dialog.Close>
             <Button variant="soft" color="gray">Cancel</Button>
           </Dialog.Close>
-          <Dialog.Close>
-            <Button onClick={handleSubmit}>Save Changes</Button>
-          </Dialog.Close>
+          <Button onClick={handleSubmit}>Save Changes</Button>
         </Flex>
       </Dialog.Content>
     </Dialog.Root>
@@ -222,32 +214,27 @@ export function EditCheckDialog({ check, onUpdated, children }: { check: Check, 
 }
 
 function CreateCheckDialog({ onCreated }: { onCreated: () => void }) {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [intervalMin, setIntervalMin] = useState(60);
+  const [name, setName] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [intervalMin, setIntervalMin] = useState<number>(60);
+  const [error, setError] = useState<string>('');
 
   const handleSubmit = async () => {
     if (!name.trim()) return;
+    setError('');
     try {
-      const res = await fetch('/api/checks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          description: description.trim() || null,
-          intervalSeconds: intervalMin * 60,
-          graceSeconds: Math.floor(intervalMin * 60 * 0.2) // 20% grace period by default
-        })
+      await ApiClient.createCheck({
+        name,
+        description: description.trim() || null,
+        intervalSeconds: intervalMin * 60,
+        graceSeconds: Math.floor(intervalMin * 60 * 0.2) // 20% grace period by default
       });
-      if (!res.ok) {
-        throw new Error('Failed to create check');
-      }
       setName('');
       setDescription('');
       onCreated();
     } catch (err) {
       console.error(err);
-      alert('Failed to create check');
+      setError((err as Error).message || 'Failed to create check');
     }
   };
 
@@ -277,13 +264,12 @@ function CreateCheckDialog({ onCreated }: { onCreated: () => void }) {
           </label>
         </Flex>
 
-        <Flex gap="3" mt="4" justify="end">
+        <Flex gap="3" mt="4" justify="end" align="center">
+          {error && <Text color="red" size="2" mr="auto">{error}</Text>}
           <Dialog.Close>
             <Button variant="soft" color="gray">Cancel</Button>
           </Dialog.Close>
-          <Dialog.Close>
-            <Button onClick={handleSubmit}>Create</Button>
-          </Dialog.Close>
+          <Button onClick={handleSubmit}>Create</Button>
         </Flex>
       </Dialog.Content>
     </Dialog.Root>

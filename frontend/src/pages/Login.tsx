@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Card, Heading, Text, TextField, Button, Flex } from '@radix-ui/themes';
 
 import { Link } from 'react-router-dom';
+import { ApiClient } from '../api/ApiClient.js';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -10,21 +11,13 @@ export default function Login() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Login failed');
-      }
+      await ApiClient.login({ username, password });
       navigate('/');
-    } catch (err: any) {
-      setError(err.message || 'Login failed');
+    } catch (err) {
+      setError((err as Error).message || 'Login failed');
     }
   };
 

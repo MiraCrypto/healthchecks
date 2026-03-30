@@ -3,18 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Heading, Table, Badge, Button, Flex, Text, Dialog, TextField, Select, Callout } from '@radix-ui/themes';
 import { Plus, ArrowLeft, RefreshCw, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
-
-interface UserData {
-  id: string;
-  username: string;
-  role: 'USER' | 'ADMIN';
-  displayName: string | null;
-  createdAt: string;
-}
+import { User } from '@healthchecks/shared';
+import { ApiClient } from '../api/ApiClient.js';
 
 export default function Admin() {
-  const [users, setUsers] = useState<UserData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -22,19 +16,14 @@ export default function Admin() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/users');
-      if (!res.ok) {
-        if (res.status === 403) {
-          setError('Access Denied: Admins Only');
-        } else {
-          setError('Failed to load users');
-        }
-        return;
-      }
-      const data = await res.json();
+      const data = await ApiClient.getUsers();
       setUsers(data);
-    } catch (err: any) {
-      setError('Network Error');
+    } catch (err) {
+      if ((err as Error).message.includes('Forbidden') || (err as Error).message.includes('403')) {
+        setError('Access Denied: Admins Only');
+      } else {
+        setError('Network Error or Failed to load users');
+      }
     } finally {
       setLoading(false);
     }
@@ -46,18 +35,10 @@ export default function Admin() {
 
   const handleRoleChange = async (userId: string, newRole: 'USER' | 'ADMIN') => {
     try {
-      const res = await fetch(`/api/users/${userId}/role`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: newRole })
-      });
-      if (res.ok) {
-        loadUsers();
-      } else {
-        alert('Failed to update role');
-      }
+      await ApiClient.updateUserRole(userId, { role: newRole });
+      loadUsers();
     } catch (err) {
-      alert('Error updating role');
+      setError((err as Error).message || 'Error updating role');
     }
   };
 
@@ -132,29 +113,22 @@ export default function Admin() {
 }
 
 function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   const [role, setRole] = useState<'USER' | 'ADMIN'>('USER');
+  const [error, setError] = useState<string>('');
 
   const handleSubmit = async () => {
     if (!username.trim() || !password.trim()) return;
+    setError('');
     try {
-      const res = await fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, role })
-      });
-      if (res.ok) {
-        setUsername('');
-        setPassword('');
-        setRole('USER');
-        onCreated();
-      } else {
-        const data = await res.json();
-        alert(`Error: ${data.error}`);
-      }
+      await ApiClient.createUser({ username, password, role });
+      setUsername('');
+      setPassword('');
+      setRole('USER');
+      onCreated();
     } catch (err) {
-      alert('Error creating user');
+      setError((err as Error).message || 'Error creating user');
     }
   };
 
@@ -190,13 +164,12 @@ function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
           </label>
         </Flex>
 
-        <Flex gap="3" mt="4" justify="end">
+        <Flex gap="3" mt="4" justify="end" align="center">
+          {error && <Text color="red" size="2" mr="auto">{error}</Text>}
           <Dialog.Close>
             <Button variant="soft" color="gray">Cancel</Button>
           </Dialog.Close>
-          <Dialog.Close>
-            <Button onClick={handleSubmit}>Create</Button>
-          </Dialog.Close>
+          <Button onClick={handleSubmit}>Create</Button>
         </Flex>
       </Dialog.Content>
     </Dialog.Root>

@@ -3,36 +3,27 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Heading, Text, Card, Flex, Button, Avatar } from '@radix-ui/themes';
 import { format } from 'date-fns';
 import { ArrowLeft } from 'lucide-react';
-
-interface ProfileData {
-  username: string;
-  displayName: string | null;
-  description: string | null;
-  createdAt: string;
-}
+import { ApiClient } from '../api/ApiClient.js';
+import { User } from '@healthchecks/shared';
 
 export default function Profile() {
   const { username } = useParams<{ username: string }>();
-  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [profile, setProfile] = useState<Pick<User, 'username' | 'displayName' | 'description' | 'createdAt'> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (!username) return;
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`/api/users/${username}`);
-        if (!res.ok) {
-          if (res.status === 404) {
-            setError('User not found');
-          } else {
-            setError('Failed to load profile');
-          }
-          return;
-        }
-        const data = await res.json();
+        const data = await ApiClient.getPublicProfile(username);
         setProfile(data);
       } catch (err) {
-        setError('Error loading profile');
+        if ((err as Error).message.includes('404') || (err as Error).message.includes('Not found')) {
+          setError('User not found');
+        } else {
+          setError((err as Error).message || 'Error loading profile');
+        }
       }
     };
     fetchProfile();
