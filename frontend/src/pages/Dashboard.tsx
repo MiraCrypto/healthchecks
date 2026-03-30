@@ -160,7 +160,7 @@ export function EditCheckDialog({ check, onUpdated, children }: { check: Check, 
     try {
       await ApiClient.updateCheck(check.id, {
         name,
-        description: description.trim() || null,
+        description: description.trim() === '' ? null : description.trim(),
         intervalSeconds: intervalMin * 60,
         graceSeconds: graceMin * 60
       });

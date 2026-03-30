@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { Theme } from '@radix-ui/themes';
-// @ts-ignore
 import '@radix-ui/themes/styles.css';
 import App from './App.js';
 

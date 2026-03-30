@@ -57,7 +57,7 @@ export default async function checkRoutes(fastify: FastifyInstance) {
     const parseRes = UpdateCheckSchema.safeParse(request.body);
     if (!parseRes.success) return reply.status(400).send({ error: parseRes.error.issues });
 
-    const updateData: any = { ...parseRes.data };
+    const updateData: Record<string, unknown> = { ...parseRes.data };
     // Convert undefined to null for description to ensure it gets cleared if empty
     if ('description' in updateData && updateData.description === undefined) {
       updateData.description = null;

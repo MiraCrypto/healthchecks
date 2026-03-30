@@ -28,7 +28,7 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
   // Handle empty responses (like 204 No Content) or endpoints that return text instead of JSON sometimes (though our API mostly returns JSON)
   const text = await response.text();
   if (!text) {
-    return null as unknown as T;
+    return null as T;
   }
 
   try {
