@@ -47,6 +47,8 @@ export const CheckSchema = z.object({
   id: z.string().uuid(),
   userId: z.string().uuid(),
   name: z.string().min(1).max(100),
+  runbook: z.string().nullable().optional(),
+  group: z.string().nullable().optional(),
   description: z.string().max(1000).nullable().optional(),
   tags: z.string().optional(), // Comma separated tags
   intervalSeconds: z.number().int().min(60), // Minimum 1 minute
@@ -63,13 +65,21 @@ export const CreateCheckSchema = z.object({
   description: z.string().max(1000).nullable().optional(),
   userId: z.string().uuid().optional(), // Will be injected by backend
   tags: z.string().optional(),
-  intervalSeconds: z.number().int().min(60),
-  graceSeconds: z.number().int().min(60),
+  intervalSeconds: z.number().int().min(60).optional(),
+  graceSeconds: z.number().int().min(60).optional(),
 });
 
 export type CreateCheckDTO = z.infer<typeof CreateCheckSchema>;
 
-export const UpdateCheckSchema = CreateCheckSchema.partial();
+export const UpdateCheckSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().max(1000).nullable().optional(),
+  tags: z.string().optional(),
+  intervalSeconds: z.number().int().min(60).optional(),
+  graceSeconds: z.number().int().min(60).optional(),
+  runbook: z.string().nullable().optional(),
+  group: z.string().nullable().optional(),
+});
 export type UpdateCheckDTO = z.infer<typeof UpdateCheckSchema>;
 
 export const PingSchema = z.object({

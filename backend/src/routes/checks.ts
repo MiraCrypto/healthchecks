@@ -47,10 +47,12 @@ export default async function checkRoutes(fastify: FastifyInstance) {
       id: crypto.randomUUID(),
       userId,
       name: data.name,
+      runbook: null,
+      group: null,
       description: data.description || null,
       tags: data.tags || undefined,
-      intervalSeconds: data.intervalSeconds,
-      graceSeconds: data.graceSeconds,
+      intervalSeconds: data.intervalSeconds ?? 3600,
+      graceSeconds: data.graceSeconds ?? 900,
       status: 'NEW' as const,
       lastPing: null,
       createdAt: new Date().toISOString()
@@ -70,9 +72,15 @@ export default async function checkRoutes(fastify: FastifyInstance) {
     if (!parseRes.success) return reply.status(400).send({ error: parseRes.error.issues });
 
     const updateData: Record<string, unknown> = { ...parseRes.data };
-    // Convert undefined to null for description to ensure it gets cleared if empty
+    // Convert undefined to null for description, runbook, group to ensure they get cleared if empty
     if ('description' in updateData && updateData.description === undefined) {
       updateData.description = null;
+    }
+    if ('runbook' in updateData && updateData.runbook === undefined) {
+      updateData.runbook = null;
+    }
+    if ('group' in updateData && updateData.group === undefined) {
+      updateData.group = null;
     }
 
     await checkRepo.update(id, userId, updateData);

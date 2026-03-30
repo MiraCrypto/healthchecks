@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Heading, Card, Text, Badge, Button, Flex, Table, Box, Dialog, ScrollArea, Code } from '@radix-ui/themes';
+import { Container, Heading, Card, Text, Badge, Button, Flex, Table, Box, Dialog, ScrollArea, Grid, TextArea, TextField } from '@radix-ui/themes';
 import { Check, Ping } from '@healthchecks/shared';
 import { format, formatDistanceToNow } from 'date-fns';
-import { ArrowLeft, Trash2, FileText, Copy, ExternalLink, Edit2 } from 'lucide-react';
-import { EditCheckDialog } from './Dashboard';
+import { ArrowLeft, Trash2, FileText, Copy, ExternalLink, Edit2, Save } from 'lucide-react';
 import { ApiClient } from '../api/ApiClient.js';
 
 function PayloadViewer({ pingId }: { pingId: string }) {
@@ -71,6 +70,18 @@ export default function CheckDetails() {
   const [selectedPingForPayload, setSelectedPingForPayload] = useState<Ping | null>(null);
   const [error, setError] = useState<string>('');
 
+  // Editable settings state
+  const [group, setGroup] = useState('');
+  const [description, setDescription] = useState('');
+  const [tags, setTags] = useState('');
+  const [intervalMin, setIntervalMin] = useState(60);
+  const [graceMin, setGraceMin] = useState(15);
+  const [settingsSaving, setSettingsSaving] = useState(false);
+
+  // Runbook state
+  const [runbook, setRunbook] = useState('');
+  const [runbookSaving, setRunbookSaving] = useState(false);
+
   const loadData = async () => {
     if (!id) return;
     try {
@@ -80,6 +91,13 @@ export default function CheckDetails() {
       ]);
 
       setCheck(checkData);
+      setGroup(checkData.group || '');
+      setDescription(checkData.description || '');
+      setTags(checkData.tags || '');
+      setIntervalMin(Math.floor(checkData.intervalSeconds / 60));
+      setGraceMin(Math.floor(checkData.graceSeconds / 60));
+      setRunbook(checkData.runbook || '');
+
       setPings(pingsData);
     } catch (err) {
       if ((err as Error).message === 'Unauthorized' || (err as Error).message.includes('401')) {
@@ -111,6 +129,42 @@ export default function CheckDetails() {
     }
   };
 
+  const handleSaveSettings = async () => {
+    if (!id || !check) return;
+    setSettingsSaving(true);
+    try {
+      await ApiClient.updateCheck(id, {
+        group: group.trim() === '' ? null : group.trim(),
+        description: description.trim() === '' ? null : description.trim(),
+        tags: tags.trim() === '' ? undefined : tags.trim(),
+        intervalSeconds: intervalMin * 60,
+        graceSeconds: graceMin * 60
+      });
+      await loadData();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save settings: ' + ((err as Error).message || 'Unknown error'));
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
+
+  const handleSaveRunbook = async () => {
+    if (!id || !check) return;
+    setRunbookSaving(true);
+    try {
+      await ApiClient.updateCheck(id, {
+        runbook: runbook.trim() === '' ? null : runbook.trim()
+      });
+      await loadData();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save runbook: ' + ((err as Error).message || 'Unknown error'));
+    } finally {
+      setRunbookSaving(false);
+    }
+  };
+
   if (loading || !check) return <Container py="6"><Text>Loading...</Text></Container>;
 
   const getStatusColor = (status: string) => {
@@ -125,96 +179,119 @@ export default function CheckDetails() {
   const pingUrl = `${window.location.origin}/ping/${check.id}`;
 
   return (
-    <Container size="3" py="6">
-      <Flex align="center" gap="3" mb="6">
-        <Button variant="ghost" onClick={() => navigate('/')}>
-          <ArrowLeft size={16} /> Back to Dashboard
-        </Button>
+    <Container size="4" py="6">
+      <Flex align="center" justify="between" mb="6">
+        <Flex align="center" gap="3">
+          <Button variant="ghost" onClick={() => navigate('/')}>
+            <ArrowLeft size={16} /> Back to Dashboard
+          </Button>
+          <Heading size="7">{check.name}</Heading>
+          <Badge size="2" color={getStatusColor(check.status)}>{check.status}</Badge>
+        </Flex>
+        <Flex align="center" gap="3">
+          {error && <Text color="red" size="2">{error}</Text>}
+          <Button color="red" variant="soft" onClick={handleDelete}>
+            <Trash2 size={16} /> Delete Check
+          </Button>
+        </Flex>
       </Flex>
 
-      <Card size="4" mb="6">
-        <Flex justify="between" align="center" mb="4">
-          <Box style={{ flex: 1, marginRight: 'var(--space-4)' }}>
-            <Heading size="7">{check.name}</Heading>
-            {check.description && (
-              <Text as="p" size="3" color="gray" mt="2" style={{ whiteSpace: 'pre-wrap' }}>{check.description}</Text>
-            )}
-          </Box>
-          <Flex gap="3" align="center">
-            {error && <Text color="red" size="2">{error}</Text>}
-            <Badge size="2" color={getStatusColor(check.status)}>{check.status}</Badge>
-            <EditCheckDialog check={check} onUpdated={loadData}>
-              <Button variant="soft" color="gray">
-                <Edit2 size={16} /> Edit
+      <Grid columns="2" gap="6">
+        <Box>
+          <Card size="3" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Flex justify="between" align="center" mb="3">
+              <Heading size="4">Runbook</Heading>
+              <Button onClick={handleSaveRunbook} disabled={runbookSaving} size="1" variant="soft">
+                <Save size={14} /> Save Runbook
               </Button>
-            </EditCheckDialog>
-            <Button color="red" variant="soft" onClick={handleDelete}>
-              <Trash2 size={16} /> Delete
-            </Button>
-          </Flex>
-        </Flex>
-
-        <Box mb="4">
-          <Text as="div" size="2" color="gray" mb="1">Ping URL:</Text>
-          <Card variant="surface" style={{ padding: '8px 12px', fontFamily: 'monospace' }}>
-            {pingUrl}
+            </Flex>
+            <Text size="2" color="gray" mb="4">
+              Write your incident response runbook, architecture notes, or emergency contacts here.
+            </Text>
+            <TextArea
+              value={runbook}
+              onChange={(e) => setRunbook(e.target.value)}
+              placeholder="# Incident Response Plan..."
+              style={{ flex: 1, minHeight: '400px', whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}
+            />
           </Card>
         </Box>
 
-        <Flex gap="6">
-          <Box>
-            <Text as="div" size="2" color="gray" mb="1">Interval</Text>
-            <Text size="3" weight="bold">{(check.intervalSeconds / 60).toFixed(0)} min</Text>
-          </Box>
-          <Box>
-            <Text as="div" size="2" color="gray" mb="1">Grace Period</Text>
-            <Text size="3" weight="bold">{(check.graceSeconds / 60).toFixed(0)} min</Text>
-          </Box>
-          <Box>
-            <Text as="div" size="2" color="gray" mb="1">Created At</Text>
-            <Text size="3" weight="bold">{format(new Date(check.createdAt), 'MMM d, yyyy')}</Text>
-          </Box>
-        </Flex>
-      </Card>
+        <Flex direction="column" gap="4">
+          <Card size="3">
+            <Heading size="4" mb="3">Ping URL</Heading>
+            <Card variant="surface" style={{ padding: '8px 12px', fontFamily: 'monospace', marginBottom: '16px' }}>
+              {pingUrl}
+            </Card>
 
-      <Heading size="5" mb="4">Recent Pings</Heading>
-      <Table.Root variant="surface">
-        <Table.Header>
-          <Table.Row>
-            <Table.ColumnHeaderCell>Time</Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell>Relative</Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell>Remote IP</Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell>Method</Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell>Payload</Table.ColumnHeaderCell>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {pings.length === 0 && (
-            <Table.Row>
-              <Table.Cell colSpan={5} style={{ textAlign: 'center' }}>
-                <Text color="gray">No pings received yet.</Text>
-              </Table.Cell>
-            </Table.Row>
-          )}
-          {pings.map(ping => (
-            <Table.Row key={ping.id}>
-              <Table.Cell>{format(new Date(ping.createdAt), 'PPpp')}</Table.Cell>
-              <Table.Cell>{formatDistanceToNow(new Date(ping.createdAt), { addSuffix: true })}</Table.Cell>
-              <Table.Cell>{ping.remoteIp || 'Unknown'}</Table.Cell>
-              <Table.Cell><Badge color="blue">{ping.method || 'GET'}</Badge></Table.Cell>
-              <Table.Cell>
-                {ping.hasPayload ? (
-                  <Button variant="soft" size="1" onClick={() => setSelectedPingForPayload(ping)}>
-                    <FileText size={14} /> View Payload
-                  </Button>
-                ) : (
-                  <Text color="gray" size="2">-</Text>
+            <Heading size="4" mb="3">Settings</Heading>
+            <Flex direction="column" gap="3" mb="4">
+              <label>
+                <Text as="div" size="2" mb="1" weight="bold">Group</Text>
+                <TextField.Root value={group} onChange={(e) => setGroup(e.target.value)} placeholder="e.g. Production" />
+              </label>
+              <label>
+                <Text as="div" size="2" mb="1" weight="bold">Description</Text>
+                <TextField.Root value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief context" />
+              </label>
+              <label>
+                <Text as="div" size="2" mb="1" weight="bold">Tags (comma separated)</Text>
+                <TextField.Root value={tags} onChange={(e) => setTags(e.target.value)} placeholder="web, db, critical" />
+              </label>
+              <Flex gap="3">
+                <label style={{ flex: 1 }}>
+                  <Text as="div" size="2" mb="1" weight="bold">Interval (minutes)</Text>
+                  <TextField.Root type="number" min="1" value={intervalMin} onChange={(e) => setIntervalMin(parseInt(e.target.value) || 1)} />
+                </label>
+                <label style={{ flex: 1 }}>
+                  <Text as="div" size="2" mb="1" weight="bold">Grace Period (minutes)</Text>
+                  <TextField.Root type="number" min="1" value={graceMin} onChange={(e) => setGraceMin(parseInt(e.target.value) || 1)} />
+                </label>
+              </Flex>
+            </Flex>
+            <Button onClick={handleSaveSettings} disabled={settingsSaving} variant="soft">
+              <Save size={16} /> Save Settings
+            </Button>
+          </Card>
+
+          <Card size="3">
+            <Heading size="4" mb="3">Recent Pings</Heading>
+            <Table.Root variant="surface">
+              <Table.Header>
+                <Table.Row>
+                  <Table.ColumnHeaderCell>Time</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Relative</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Payload</Table.ColumnHeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {pings.length === 0 && (
+                  <Table.Row>
+                    <Table.Cell colSpan={3} style={{ textAlign: 'center' }}>
+                      <Text color="gray">No pings received yet.</Text>
+                    </Table.Cell>
+                  </Table.Row>
                 )}
-              </Table.Cell>
-            </Table.Row>
-          ))}
-        </Table.Body>
-      </Table.Root>
+                {pings.map(ping => (
+                  <Table.Row key={ping.id}>
+                    <Table.Cell>{format(new Date(ping.createdAt), 'PPpp')}</Table.Cell>
+                    <Table.Cell>{formatDistanceToNow(new Date(ping.createdAt), { addSuffix: true })}</Table.Cell>
+                    <Table.Cell>
+                      {ping.hasPayload ? (
+                        <Button variant="soft" size="1" onClick={() => setSelectedPingForPayload(ping)}>
+                          <FileText size={14} /> View
+                        </Button>
+                      ) : (
+                        <Text color="gray" size="2">-</Text>
+                      )}
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table.Root>
+          </Card>
+        </Flex>
+      </Grid>
 
       <Dialog.Root open={!!selectedPingForPayload} onOpenChange={(open) => !open && setSelectedPingForPayload(null)}>
         <Dialog.Content style={{ maxWidth: 600 }}>

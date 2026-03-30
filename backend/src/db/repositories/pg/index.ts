@@ -89,6 +89,8 @@ export class PgCheckRepository implements ICheckRepository {
       id: row.id,
       userId: row.userId,
       name: row.name,
+      runbook: row.runbook,
+      group: row.group,
       description: row.description,
       tags: row.tags || undefined,
       intervalSeconds: row.intervalSeconds,
