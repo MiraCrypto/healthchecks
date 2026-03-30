@@ -4,6 +4,9 @@ import crypto from 'crypto';
 import { userRepo } from '../db/DatabaseFactory.js';
 import { UpdateProfileSchema, ChangePasswordSchema, AdminCreateUserSchema, AdminUpdateRoleSchema } from '@healthchecks/shared';
 import { eq, and, sql } from 'drizzle-orm';
+import { z } from 'zod';
+
+const uuidSchema = z.string().uuid();
 
 // We'll expose raw DB instances via userRepo to make custom queries if needed,
 // but for simplicity we'll just add the necessary methods to userRepo.
@@ -118,6 +121,9 @@ export default async function userRoutes(fastify: FastifyInstance) {
     }
 
     const { id } = request.params as { id: string };
+    if (!uuidSchema.safeParse(id).success) {
+      return reply.status(400).send({ error: 'Invalid UUID format for id' });
+    }
     const parseRes = AdminUpdateRoleSchema.safeParse(request.body);
     if (!parseRes.success) {
       return reply.status(400).send({ error: 'Invalid payload' });

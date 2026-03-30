@@ -1,6 +1,9 @@
 import { FastifyInstance } from 'fastify';
 import { checkRepo, pingRepo } from '../db/DatabaseFactory.js';
 import crypto from 'crypto';
+import { z } from 'zod';
+
+const uuidSchema = z.string().uuid();
 
 export default async function pingRoutes(fastify: FastifyInstance) {
   fastify.removeAllContentTypeParsers();
@@ -11,6 +14,10 @@ export default async function pingRoutes(fastify: FastifyInstance) {
   // Common handler for both GET and POST requests to /ping/:uuid
   const handlePing = async (request: import('fastify').FastifyRequest, reply: import('fastify').FastifyReply) => {
     const { uuid } = request.params as { uuid: string };
+
+    if (!uuidSchema.safeParse(uuid).success) {
+      return reply.status(400).send({ error: 'Invalid UUID format for check' });
+    }
 
     const check = await checkRepo.findByIdUnscoped(uuid);
     if (!check) {

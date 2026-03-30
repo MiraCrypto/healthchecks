@@ -2,6 +2,9 @@ import { FastifyInstance } from 'fastify';
 import { checkRepo, pingRepo } from '../db/DatabaseFactory.js';
 import { CreateCheckSchema, UpdateCheckSchema } from '@healthchecks/shared';
 import crypto from 'crypto';
+import { z } from 'zod';
+
+const uuidSchema = z.string().uuid();
 
 export default async function checkRoutes(fastify: FastifyInstance) {
   fastify.get('/', async (request, reply) => {
@@ -13,6 +16,9 @@ export default async function checkRoutes(fastify: FastifyInstance) {
   fastify.get('/:id', async (request, reply) => {
     const userId = request.user!.id;
     const { id } = request.params as { id: string };
+    if (!uuidSchema.safeParse(id).success) {
+      return reply.status(400).send({ error: 'Invalid UUID format for id' });
+    }
     const check = await checkRepo.findById(id, userId);
     if (!check) return reply.status(404).send({ error: 'Check not found' });
     return reply.send(check);
@@ -21,6 +27,9 @@ export default async function checkRoutes(fastify: FastifyInstance) {
   fastify.get('/:id/pings', async (request, reply) => {
     const userId = request.user!.id;
     const { id } = request.params as { id: string };
+    if (!uuidSchema.safeParse(id).success) {
+      return reply.status(400).send({ error: 'Invalid UUID format for id' });
+    }
     const check = await checkRepo.findById(id, userId);
     if (!check) return reply.status(404).send({ error: 'Check not found' });
 
@@ -54,6 +63,9 @@ export default async function checkRoutes(fastify: FastifyInstance) {
   fastify.put('/:id', async (request, reply) => {
     const userId = request.user!.id;
     const { id } = request.params as { id: string };
+    if (!uuidSchema.safeParse(id).success) {
+      return reply.status(400).send({ error: 'Invalid UUID format for id' });
+    }
     const parseRes = UpdateCheckSchema.safeParse(request.body);
     if (!parseRes.success) return reply.status(400).send({ error: parseRes.error.issues });
 
@@ -71,6 +83,9 @@ export default async function checkRoutes(fastify: FastifyInstance) {
   fastify.delete('/:id', async (request, reply) => {
     const userId = request.user!.id;
     const { id } = request.params as { id: string };
+    if (!uuidSchema.safeParse(id).success) {
+      return reply.status(400).send({ error: 'Invalid UUID format for id' });
+    }
     await checkRepo.delete(id, userId);
     return reply.send({ success: true });
   });

@@ -21,14 +21,14 @@ export const UpdateProfileSchema = z.object({
 export type UpdateProfileDTO = z.infer<typeof UpdateProfileSchema>;
 
 export const ChangePasswordSchema = z.object({
-  currentPassword: z.string(),
-  newPassword: z.string().min(6),
+  currentPassword: z.string().max(72),
+  newPassword: z.string().min(6).max(72),
 });
 export type ChangePasswordDTO = z.infer<typeof ChangePasswordSchema>;
 
 export const AdminCreateUserSchema = z.object({
   username: z.string().min(3).max(50),
-  password: z.string().min(6),
+  password: z.string().min(6).max(72),
   role: RoleSchema.default("USER"),
 });
 export type AdminCreateUserDTO = z.infer<typeof AdminCreateUserSchema>;
@@ -86,7 +86,7 @@ export type Ping = z.infer<typeof PingSchema>;
 
 export const LoginSchema = z.object({
   username: z.string(),
-  password: z.string()
+  password: z.string().max(72)
 });
 
 export type LoginDTO = z.infer<typeof LoginSchema>;

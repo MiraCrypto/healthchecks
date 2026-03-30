@@ -7,9 +7,8 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "db:generate:sqlite": "drizzle-kit generate:sqlite --config drizzle.config.sqlite.ts",
-    "db:push": "drizzle-kit push --config drizzle.config.ts",
-    "db:push:pg": "drizzle-kit push --config drizzle.config.pg.ts"
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",
