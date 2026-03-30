@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Heading, Card, Text, Badge, Button, Flex, Table, Box, Dialog, ScrollArea, Grid, TextArea, TextField } from '@radix-ui/themes';
+import { Container, Heading, Card, Text, Badge, Button, Flex, Table, Box, Dialog, ScrollArea, Grid, TextArea, TextField, Callout } from '@radix-ui/themes';
 import { Check, Ping } from '@healthchecks/shared';
 import { format, formatDistanceToNow } from 'date-fns';
-import { ArrowLeft, Trash2, FileText, Copy, ExternalLink, Edit2, Save } from 'lucide-react';
+import { ArrowLeft, Trash2, FileText, Copy, ExternalLink, Edit2, Save, CheckCircle, AlertCircle } from 'lucide-react';
 import { ApiClient } from '../api/ApiClient.js';
 
 function PayloadViewer({ pingId }: { pingId: string }) {
@@ -78,10 +78,12 @@ export default function CheckDetails() {
   const [intervalMin, setIntervalMin] = useState(60);
   const [graceMin, setGraceMin] = useState(15);
   const [settingsSaving, setSettingsSaving] = useState(false);
+  const [settingsMessage, setSettingsMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   // Runbook state
   const [runbook, setRunbook] = useState('');
   const [runbookSaving, setRunbookSaving] = useState(false);
+  const [runbookMessage, setRunbookMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   const loadData = async () => {
     if (!id) return;
@@ -134,9 +136,10 @@ export default function CheckDetails() {
   const handleSaveSettings = async () => {
     if (!id || !check) return;
     if (!name.trim()) {
-      alert('Name is required');
+      setSettingsMessage({ type: 'error', text: 'Name is required' });
       return;
     }
+    setSettingsMessage(null);
     setSettingsSaving(true);
     try {
       await ApiClient.updateCheck(id, {
@@ -148,9 +151,10 @@ export default function CheckDetails() {
         graceSeconds: graceMin * 60
       });
       await loadData();
+      setSettingsMessage({ type: 'success', text: 'Settings saved successfully' });
     } catch (err) {
       console.error(err);
-      alert('Failed to save settings: ' + ((err as Error).message || 'Unknown error'));
+      setSettingsMessage({ type: 'error', text: 'Failed to save settings: ' + ((err as Error).message || 'Unknown error') });
     } finally {
       setSettingsSaving(false);
     }
@@ -158,15 +162,17 @@ export default function CheckDetails() {
 
   const handleSaveRunbook = async () => {
     if (!id || !check) return;
+    setRunbookMessage(null);
     setRunbookSaving(true);
     try {
       await ApiClient.updateCheck(id, {
         runbook: runbook.trim() === '' ? null : runbook.trim()
       });
       await loadData();
+      setRunbookMessage({ type: 'success', text: 'Runbook saved successfully' });
     } catch (err) {
       console.error(err);
-      alert('Failed to save runbook: ' + ((err as Error).message || 'Unknown error'));
+      setRunbookMessage({ type: 'error', text: 'Failed to save runbook: ' + ((err as Error).message || 'Unknown error') });
     } finally {
       setRunbookSaving(false);
     }
@@ -215,6 +221,20 @@ export default function CheckDetails() {
             <Text size="2" color="gray" mb="4">
               Write your incident response runbook, architecture notes, or emergency contacts here.
             </Text>
+
+            {runbookMessage && (
+              <Box mb="4">
+                <Callout.Root color={runbookMessage.type === 'error' ? 'red' : 'green'}>
+                  <Callout.Icon>
+                    {runbookMessage.type === 'error' ? <AlertCircle size={16} /> : <CheckCircle size={16} />}
+                  </Callout.Icon>
+                  <Callout.Text>
+                    {runbookMessage.text}
+                  </Callout.Text>
+                </Callout.Root>
+              </Box>
+            )}
+
             <TextArea
               value={runbook}
               onChange={(e) => setRunbook(e.target.value)}
@@ -238,34 +258,53 @@ export default function CheckDetails() {
                 <Text size="2">{format(new Date(check.createdAt), 'MMM d, yyyy')}</Text>
               </Box>
             </Flex>
-            <Flex direction="column" gap="3" mb="4">
+            <Flex direction="column" gap="4" mb="4">
               <label>
                 <Text as="div" size="2" mb="1" weight="bold">Name</Text>
                 <TextField.Root value={name} onChange={(e) => setName(e.target.value)} placeholder="Check Name" />
               </label>
-              <label>
-                <Text as="div" size="2" mb="1" weight="bold">Group</Text>
-                <TextField.Root value={group} onChange={(e) => setGroup(e.target.value)} placeholder="e.g. Production" />
-              </label>
+
               <label>
                 <Text as="div" size="2" mb="1" weight="bold">Description</Text>
-                <TextField.Root value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief context" />
+                <TextArea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief context about this check" />
               </label>
-              <label>
-                <Text as="div" size="2" mb="1" weight="bold">Tags (comma separated)</Text>
-                <TextField.Root value={tags} onChange={(e) => setTags(e.target.value)} placeholder="web, db, critical" />
-              </label>
-              <Flex gap="3">
-                <label style={{ flex: 1 }}>
+
+              <Grid columns="2" gap="3">
+                <label>
+                  <Text as="div" size="2" mb="1" weight="bold">Group</Text>
+                  <TextField.Root value={group} onChange={(e) => setGroup(e.target.value)} placeholder="e.g. Production" />
+                </label>
+                <label>
+                  <Text as="div" size="2" mb="1" weight="bold">Tags (comma separated)</Text>
+                  <TextField.Root value={tags} onChange={(e) => setTags(e.target.value)} placeholder="web, db, critical" />
+                </label>
+              </Grid>
+
+              <Grid columns="2" gap="3">
+                <label>
                   <Text as="div" size="2" mb="1" weight="bold">Interval (minutes)</Text>
                   <TextField.Root type="number" min="1" value={intervalMin} onChange={(e) => setIntervalMin(parseInt(e.target.value) || 1)} />
                 </label>
-                <label style={{ flex: 1 }}>
+                <label>
                   <Text as="div" size="2" mb="1" weight="bold">Grace Period (minutes)</Text>
                   <TextField.Root type="number" min="1" value={graceMin} onChange={(e) => setGraceMin(parseInt(e.target.value) || 1)} />
                 </label>
-              </Flex>
+              </Grid>
             </Flex>
+
+            {settingsMessage && (
+              <Box mb="4">
+                <Callout.Root color={settingsMessage.type === 'error' ? 'red' : 'green'}>
+                  <Callout.Icon>
+                    {settingsMessage.type === 'error' ? <AlertCircle size={16} /> : <CheckCircle size={16} />}
+                  </Callout.Icon>
+                  <Callout.Text>
+                    {settingsMessage.text}
+                  </Callout.Text>
+                </Callout.Root>
+              </Box>
+            )}
+
             <Button onClick={handleSaveSettings} disabled={settingsSaving} variant="soft">
               <Save size={16} /> Save Settings
             </Button>

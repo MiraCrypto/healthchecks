@@ -3,12 +3,15 @@ import { Check, Ping, User, LoginDTO, UpdateProfileDTO, ChangePasswordDTO, Admin
 const API_BASE = '/api';
 
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const headers = new Headers(options?.headers);
+
+  if (options?.body && typeof options.body === 'string') {
+    headers.set('Content-Type', 'application/json');
+  }
+
   const response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
+    headers,
     credentials: 'include',
   });
 
