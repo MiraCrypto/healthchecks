@@ -72,7 +72,7 @@ export default async function checkRoutes(fastify: FastifyInstance) {
     if (!parseRes.success) return reply.status(400).send({ error: parseRes.error.issues });
 
     const updateData: Record<string, unknown> = { ...parseRes.data };
-    // Convert undefined to null for description, runbook, group to ensure they get cleared if empty
+    // Convert undefined to null for description, runbook, group, tags to ensure they get cleared if empty
     if ('description' in updateData && updateData.description === undefined) {
       updateData.description = null;
     }
@@ -81,6 +81,9 @@ export default async function checkRoutes(fastify: FastifyInstance) {
     }
     if ('group' in updateData && updateData.group === undefined) {
       updateData.group = null;
+    }
+    if ('tags' in updateData && updateData.tags === undefined) {
+      updateData.tags = null;
     }
 
     await checkRepo.update(id, userId, updateData);

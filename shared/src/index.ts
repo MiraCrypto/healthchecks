@@ -74,7 +74,7 @@ export type CreateCheckDTO = z.infer<typeof CreateCheckSchema>;
 export const UpdateCheckSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(1000).nullable().optional(),
-  tags: z.string().optional(),
+  tags: z.string().nullable().optional(),
   intervalSeconds: z.number().int().min(60).optional(),
   graceSeconds: z.number().int().min(60).optional(),
   runbook: z.string().nullable().optional(),

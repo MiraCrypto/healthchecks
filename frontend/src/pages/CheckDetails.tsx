@@ -71,6 +71,7 @@ export default function CheckDetails() {
   const [error, setError] = useState<string>('');
 
   // Editable settings state
+  const [name, setName] = useState('');
   const [group, setGroup] = useState('');
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState('');
@@ -91,6 +92,7 @@ export default function CheckDetails() {
       ]);
 
       setCheck(checkData);
+      setName(checkData.name);
       setGroup(checkData.group || '');
       setDescription(checkData.description || '');
       setTags(checkData.tags || '');
@@ -131,12 +133,17 @@ export default function CheckDetails() {
 
   const handleSaveSettings = async () => {
     if (!id || !check) return;
+    if (!name.trim()) {
+      alert('Name is required');
+      return;
+    }
     setSettingsSaving(true);
     try {
       await ApiClient.updateCheck(id, {
+        name: name.trim(),
         group: group.trim() === '' ? null : group.trim(),
         description: description.trim() === '' ? null : description.trim(),
-        tags: tags.trim() === '' ? undefined : tags.trim(),
+        tags: tags.trim() === '' ? null : tags.trim(),
         intervalSeconds: intervalMin * 60,
         graceSeconds: graceMin * 60
       });
@@ -224,8 +231,18 @@ export default function CheckDetails() {
               {pingUrl}
             </Card>
 
-            <Heading size="4" mb="3">Settings</Heading>
+            <Flex align="center" justify="between" mb="3">
+              <Heading size="4">Settings</Heading>
+              <Box>
+                <Text as="div" size="1" color="gray" align="right">Created At</Text>
+                <Text size="2">{format(new Date(check.createdAt), 'MMM d, yyyy')}</Text>
+              </Box>
+            </Flex>
             <Flex direction="column" gap="3" mb="4">
+              <label>
+                <Text as="div" size="2" mb="1" weight="bold">Name</Text>
+                <TextField.Root value={name} onChange={(e) => setName(e.target.value)} placeholder="Check Name" />
+              </label>
               <label>
                 <Text as="div" size="2" mb="1" weight="bold">Group</Text>
                 <TextField.Root value={group} onChange={(e) => setGroup(e.target.value)} placeholder="e.g. Production" />
