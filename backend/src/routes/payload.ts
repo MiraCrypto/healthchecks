@@ -1,8 +1,8 @@
-import { FastifyInstance } from 'fastify';
-import { pingRepo } from '../db/index.js';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { pingRepo } from '../db/DatabaseFactory.js';
 
 export default async function payloadRoutes(fastify: FastifyInstance) {
-  fastify.get('/:pingId', async (request: any, reply: any) => {
+  fastify.get('/:pingId', async (request: FastifyRequest, reply: FastifyReply) => {
     const { pingId } = request.params as { pingId: string };
     const result = await pingRepo.findPayloadById(pingId);
 

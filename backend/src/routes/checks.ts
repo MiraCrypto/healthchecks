@@ -1,17 +1,17 @@
 import { FastifyInstance } from 'fastify';
-import { checkRepo, pingRepo } from '../db/index.js';
+import { checkRepo, pingRepo } from '../db/DatabaseFactory.js';
 import { CreateCheckSchema, UpdateCheckSchema } from '@healthchecks/shared';
 import crypto from 'crypto';
 
 export default async function checkRoutes(fastify: FastifyInstance) {
   fastify.get('/', async (request, reply) => {
-    const userId = (request as any).user.id;
+    const userId = request.user!.id;
     const checks = await checkRepo.findAll(userId);
     return reply.send(checks);
   });
 
   fastify.get('/:id', async (request, reply) => {
-    const userId = (request as any).user.id;
+    const userId = request.user!.id;
     const { id } = request.params as { id: string };
     const check = await checkRepo.findById(id, userId);
     if (!check) return reply.status(404).send({ error: 'Check not found' });
@@ -19,7 +19,7 @@ export default async function checkRoutes(fastify: FastifyInstance) {
   });
 
   fastify.get('/:id/pings', async (request, reply) => {
-    const userId = (request as any).user.id;
+    const userId = request.user!.id;
     const { id } = request.params as { id: string };
     const check = await checkRepo.findById(id, userId);
     if (!check) return reply.status(404).send({ error: 'Check not found' });
@@ -29,7 +29,7 @@ export default async function checkRoutes(fastify: FastifyInstance) {
   });
 
   fastify.post('/', async (request, reply) => {
-    const userId = (request as any).user.id;
+    const userId = request.user!.id;
     const parseRes = CreateCheckSchema.safeParse(request.body);
     if (!parseRes.success) return reply.status(400).send({ error: parseRes.error.issues });
 
@@ -52,7 +52,7 @@ export default async function checkRoutes(fastify: FastifyInstance) {
   });
 
   fastify.put('/:id', async (request, reply) => {
-    const userId = (request as any).user.id;
+    const userId = request.user!.id;
     const { id } = request.params as { id: string };
     const parseRes = UpdateCheckSchema.safeParse(request.body);
     if (!parseRes.success) return reply.status(400).send({ error: parseRes.error.issues });
@@ -69,7 +69,7 @@ export default async function checkRoutes(fastify: FastifyInstance) {
   });
 
   fastify.delete('/:id', async (request, reply) => {
-    const userId = (request as any).user.id;
+    const userId = request.user!.id;
     const { id } = request.params as { id: string };
     await checkRepo.delete(id, userId);
     return reply.send({ success: true });

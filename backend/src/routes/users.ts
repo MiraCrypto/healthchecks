@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-import { userRepo } from '../db/index.js';
+import { userRepo } from '../db/DatabaseFactory.js';
 import { UpdateProfileSchema, ChangePasswordSchema, AdminCreateUserSchema, AdminUpdateRoleSchema } from '@healthchecks/shared';
 import { eq, and, sql } from 'drizzle-orm';
 
@@ -27,7 +27,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
 
   // Update Profile
   fastify.put('/me', async (request, reply) => {
-    const userToken = (request as any).user;
+    const userToken = request.user!;
     const parseRes = UpdateProfileSchema.safeParse(request.body);
     if (!parseRes.success) {
       return reply.status(400).send({ error: 'Invalid payload' });
@@ -39,7 +39,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
 
   // Change Password
   fastify.put('/me/password', async (request, reply) => {
-    const userToken = (request as any).user;
+    const userToken = request.user!;
     const parseRes = ChangePasswordSchema.safeParse(request.body);
     if (!parseRes.success) {
       return reply.status(400).send({ error: 'Invalid payload' });
@@ -47,8 +47,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
 
     const { currentPassword, newPassword } = parseRes.data;
 
-    // @ts-ignore
-    const user = await userRepo.findById(userToken.id) as any;
+    const user = await userRepo.findById(userToken.id);
     if (!user) return reply.status(404).send({ error: 'User not found' });
 
     const match = await bcrypt.compare(currentPassword, user.passwordHash);
@@ -64,7 +63,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
 
   // Admin Routes
   fastify.get('/', async (request, reply) => {
-    const userToken = (request as any).user;
+    const userToken = request.user!;
     if (userToken.role !== 'ADMIN') {
       return reply.status(403).send({ error: 'Forbidden' });
     }
@@ -80,7 +79,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
   });
 
   fastify.post('/', async (request, reply) => {
-    const userToken = (request as any).user;
+    const userToken = request.user!;
     if (userToken.role !== 'ADMIN') {
       return reply.status(403).send({ error: 'Forbidden' });
     }
@@ -113,7 +112,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
   });
 
   fastify.put('/:id/role', async (request, reply) => {
-    const userToken = (request as any).user;
+    const userToken = request.user!;
     if (userToken.role !== 'ADMIN') {
       return reply.status(403).send({ error: 'Forbidden' });
     }

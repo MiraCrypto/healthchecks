@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-import { userRepo } from '../db/index.js';
+import { userRepo } from '../db/DatabaseFactory.js';
 import { LoginSchema } from '@healthchecks/shared';
 
 export default async function authRoutes(fastify: FastifyInstance) {
@@ -23,7 +23,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
     // Make the first user an admin
     const isFirstUser = await userRepo.count() === 0;
-    const role = isFirstUser ? 'ADMIN' : 'USER';
+    const role: 'ADMIN' | 'USER' = isFirstUser ? 'ADMIN' : 'USER';
 
     const newUser = {
       id: crypto.randomUUID(),
@@ -43,7 +43,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
       { expiresIn: '7d' }
     );
 
-    (reply as any).setCookie('auth_token', token, {
+    reply.setCookie('auth_token', token, {
       path: '/',
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -62,8 +62,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
     const { username, password } = parseRes.data;
 
-    // @ts-ignore
-    let user = await userRepo.findByUsername(username) as any;
+    const user = await userRepo.findByUsername(username);
 
     if (!user) {
       return reply.status(401).send({ error: 'Invalid credentials' });
@@ -80,7 +79,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
       { expiresIn: '7d' }
     );
 
-    (reply as any).setCookie('auth_token', token, {
+    reply.setCookie('auth_token', token, {
       path: '/',
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -92,12 +91,12 @@ export default async function authRoutes(fastify: FastifyInstance) {
   });
 
   fastify.post('/logout', async (request, reply) => {
-    (reply as any).clearCookie('auth_token', { path: '/' });
+    reply.clearCookie('auth_token', { path: '/' });
     return reply.send({ message: 'Logged out' });
   });
 
   fastify.get('/me', async (request, reply) => {
-    const userToken = (request as any).user;
+    const userToken = request.user;
     if (!userToken) return reply.status(401).send({ error: 'Unauthorized' });
     const user = await userRepo.findByUsername(userToken.username);
     if (!user) return reply.status(401).send({ error: 'Unauthorized' });

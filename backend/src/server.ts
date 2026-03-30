@@ -1,9 +1,8 @@
 import Fastify, { FastifyInstance } from 'fastify';
-// @ts-ignore
 import cors from '@fastify/cors';
-// @ts-ignore
 import cookie from '@fastify/cookie';
 import jwt from 'jsonwebtoken';
+import './types/fastify.js';
 import authRoutes from './routes/auth.js';
 import checkRoutes from './routes/checks.js';
 import payloadRoutes from './routes/payload.js';
@@ -25,7 +24,7 @@ async function buildServer() {
   });
 
   // Authentication Hook (Minimal JWT verify)
-  fastify.decorateRequest('user', null);
+  fastify.decorateRequest('user', undefined);
   fastify.addHook('preHandler', async (request, reply) => {
     // Skip auth for ping routes and payloads
     if (request.url.startsWith('/ping') || request.url.startsWith('/payload')) return;
@@ -34,13 +33,13 @@ async function buildServer() {
     if ((request.url === '/api/auth/login' || request.url === '/api/auth/register') && request.method === 'POST') return;
 
     try {
-      const token = (request as any).cookies.auth_token;
+      const token = request.cookies.auth_token;
       if (!token) {
         return reply.status(401).send({ error: 'Unauthorized' });
       }
       const secret = process.env.JWT_SECRET || 'supersecret123';
-      const decoded = jwt.verify(token, secret);
-      (request as any).user = decoded;
+      const decoded = jwt.verify(token, secret) as { id: string; username: string; role: 'USER' | 'ADMIN' };
+      request.user = decoded;
     } catch (err) {
       return reply.status(401).send({ error: 'Invalid Token' });
     }
