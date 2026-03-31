@@ -257,8 +257,8 @@ export default function CheckDetails() {
       </Flex>
 
       <Grid columns={{ initial: '1', md: '2' }} gap="6">
-        <Box>
-          <Card size="3" variant="surface" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Flex direction="column" gap="4">
+          <Card size="3" variant="surface" style={{ display: 'flex', flexDirection: 'column' }}>
             <Flex justify="between" align="center" mb="3">
               <Heading size="4" style={{ color: 'var(--slate-12)' }}>Runbook</Heading>
               <Button onClick={handleSaveRunbook} disabled={runbookSaving} size="1" variant="soft" color="iris" style={{ cursor: 'pointer' }}>
@@ -290,7 +290,7 @@ export default function CheckDetails() {
               style={{ flex: 1, minHeight: '400px', whiteSpace: 'pre-wrap', fontFamily: 'var(--font-mono)' }}
             />
           </Card>
-        </Box>
+        </Flex>
 
         <Flex direction="column" gap="4">
           <Card size="3" variant="surface">
@@ -361,7 +361,7 @@ export default function CheckDetails() {
             </Button>
           </Card>
 
-          <Card size="3" variant="surface" style={{ height: '100%' }}>
+          <Card size="3" variant="surface">
             <Heading size="4" mb="4" style={{ color: 'var(--slate-12)' }}>Recent Pings</Heading>
             <Table.Root variant="surface" size="2">
               <Table.Header>
