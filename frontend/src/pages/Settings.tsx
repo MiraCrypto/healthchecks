@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Heading, Flex, Button, TextField, Text, TextArea, Callout } from '@radix-ui/themes';
 import { ArrowLeft, Check, AlertCircle } from 'lucide-react';
 import { ApiClient } from '../api/ApiClient.js';
+
+import { Button } from "@/components/ui/button.js";
+import { Input } from "@/components/ui/input.js";
+import { Textarea } from "@/components/ui/textarea.js";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.js";
 
 export default function Settings() {
   const [displayName, setDisplayName] = useState('');
@@ -66,67 +70,71 @@ export default function Settings() {
   };
 
   return (
-    <Container size="3" py="6">
-      <Flex mb="6" align="center" gap="3">
-        <Button variant="ghost" onClick={() => navigate('/')}><ArrowLeft size={16} /> Dashboard</Button>
-      </Flex>
+    <div className="container mx-auto py-6 max-w-3xl">
+      <div className="flex mb-6 items-center gap-3">
+        <Button variant="ghost" onClick={() => navigate('/')}>
+          <ArrowLeft className="w-4 h-4 mr-2" /> Dashboard
+        </Button>
+      </div>
 
-      <Heading size="8" mb="6">Settings</Heading>
+      <h1 className="text-4xl font-bold tracking-tight mb-6">Settings</h1>
 
-      <Flex direction="column" gap="8">
+      <div className="flex flex-col gap-8">
         {/* Profile Form */}
-        <Flex direction="column" gap="4">
-          <Heading size="5">Profile</Heading>
+        <div className="flex flex-col gap-4">
+          <h2 className="text-2xl font-semibold tracking-tight">Profile</h2>
 
           {profileMessage && (
-            <Callout.Root color={profileMessage.type === 'success' ? 'green' : 'red'}>
-              <Callout.Icon>{profileMessage.type === 'success' ? <Check size={16}/> : <AlertCircle size={16}/>}</Callout.Icon>
-              <Callout.Text>{profileMessage.text}</Callout.Text>
-            </Callout.Root>
+            <Alert variant={profileMessage.type === 'error' ? 'destructive' : 'default'}>
+              {profileMessage.type === 'error' ? <AlertCircle className="h-4 w-4" /> : <Check className="h-4 w-4" />}
+              <AlertTitle>{profileMessage.type === 'error' ? 'Error' : 'Success'}</AlertTitle>
+              <AlertDescription>{profileMessage.text}</AlertDescription>
+            </Alert>
           )}
 
           <form onSubmit={handleUpdateProfile}>
-            <Flex direction="column" gap="4">
-              <label>
-                <Text as="div" size="2" mb="1" weight="bold">Display Name</Text>
-                <TextField.Root
+            <div className="flex flex-col gap-4">
+              <label className="flex flex-col gap-1">
+                <span className="text-sm font-bold">Display Name</span>
+                <Input
                   value={displayName}
                   onChange={e => setDisplayName(e.target.value)}
                   placeholder="John Doe"
                 />
               </label>
 
-              <label>
-                <Text as="div" size="2" mb="1" weight="bold">Description</Text>
-                <TextArea
+              <label className="flex flex-col gap-1">
+                <span className="text-sm font-bold">Description</span>
+                <Textarea
                   value={description}
                   onChange={e => setDescription(e.target.value)}
                   placeholder="Tell us about yourself..."
-                  style={{ minHeight: 100 }}
+                  className="min-h-[100px]"
                 />
               </label>
 
-              <Button type="submit" mt="2" style={{ alignSelf: 'flex-start' }}>Save Profile</Button>
-            </Flex>
+              <Button type="submit" className="mt-2 self-start">Save Profile</Button>
+            </div>
           </form>
-        </Flex>
+        </div>
 
         {/* Password Form */}
-        <Flex direction="column" gap="4">
-          <Heading size="5">Change Password</Heading>
+        <div className="flex flex-col gap-4">
+          <h2 className="text-2xl font-semibold tracking-tight">Change Password</h2>
 
           {passwordMessage && (
-            <Callout.Root color={passwordMessage.type === 'success' ? 'green' : 'red'}>
-              <Callout.Icon>{passwordMessage.type === 'success' ? <Check size={16}/> : <AlertCircle size={16}/>}</Callout.Icon>
-              <Callout.Text>{passwordMessage.text}</Callout.Text>
-            </Callout.Root>
+            <Alert variant={passwordMessage.type === 'error' ? 'destructive' : 'default'}>
+              {passwordMessage.type === 'error' ? <AlertCircle className="h-4 w-4" /> : <Check className="h-4 w-4" />}
+              <AlertTitle>{passwordMessage.type === 'error' ? 'Error' : 'Success'}</AlertTitle>
+              <AlertDescription>{passwordMessage.text}</AlertDescription>
+            </Alert>
           )}
 
           <form onSubmit={handleChangePassword}>
-            <Flex direction="column" gap="4">
-              <label>
-                <Text as="div" size="2" mb="1" weight="bold">Current Password</Text>
-                <TextField.Root
+            <div className="flex flex-col gap-4">
+              <label className="flex flex-col gap-1">
+                <span className="text-sm font-bold">Current Password</span>
+                <Input
                   type="password"
                   value={currentPassword}
                   onChange={e => setCurrentPassword(e.target.value)}
@@ -134,9 +142,9 @@ export default function Settings() {
                 />
               </label>
 
-              <label>
-                <Text as="div" size="2" mb="1" weight="bold">New Password</Text>
-                <TextField.Root
+              <label className="flex flex-col gap-1">
+                <span className="text-sm font-bold">New Password</span>
+                <Input
                   type="password"
                   value={newPassword}
                   onChange={e => setNewPassword(e.target.value)}
@@ -144,11 +152,11 @@ export default function Settings() {
                 />
               </label>
 
-              <Button type="submit" mt="2" color="ruby" style={{ alignSelf: 'flex-start' }}>Update Password</Button>
-            </Flex>
+              <Button type="submit" variant="destructive" className="mt-2 self-start">Update Password</Button>
+            </div>
           </form>
-        </Flex>
-      </Flex>
-    </Container>
+        </div>
+      </div>
+    </div>
   );
 }

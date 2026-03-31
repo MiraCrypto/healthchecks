@@ -1,12 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Heading, Table, Badge, Button, Flex, Text, Dialog, TextField } from '@radix-ui/themes';
 import { Check } from '@healthchecks/shared';
 import { formatDistanceToNow } from 'date-fns';
 import { Plus, RefreshCw, LogOut, Settings as SettingsIcon, Shield, Edit2 } from 'lucide-react';
-import { TextArea } from '@radix-ui/themes';
 import { User } from '@healthchecks/shared';
 import { ApiClient } from '../api/ApiClient.js';
+
+import { Button } from "@/components/ui/button.js";
+import { Input } from "@/components/ui/input.js";
+import { Badge } from "@/components/ui/badge.js";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table.js";
 
 export default function Dashboard() {
   const [checks, setChecks] = useState<Check[]>([]);
@@ -59,43 +69,42 @@ export default function Dashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'UP': return 'green';
-      case 'DOWN': return 'red';
-      case 'PAUSED': return 'amber';
-      default: return 'gray';
+      case 'UP': return 'default'; // primary color or custom green
+      case 'DOWN': return 'destructive';
+      case 'PAUSED': return 'secondary';
+      default: return 'outline';
     }
   };
 
   return (
-    <Container size="4" py="6">
-      <Flex justify="between" align="center" mb="6">
-        <Heading size="8">Checks</Heading>
-        <Flex gap="3" align="center">
+    <div className="container mx-auto py-6 max-w-5xl">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-4xl font-bold tracking-tight">Checks</h1>
+        <div className="flex gap-3 items-center">
           {user && (
-            <Text size="2" color="gray" mr="2">
-              Welcome, <a href={`/u/${user.username}`} style={{ textDecoration: 'none', color: 'inherit' }}><strong>{user.username}</strong></a>
-            </Text>
+            <span className="text-sm text-muted-foreground mr-2">
+              Welcome, <a href={`/u/${user.username}`} className="font-bold hover:underline">{user.username}</a>
+            </span>
           )}
           {user?.role === 'ADMIN' && (
-            <Button variant="soft" color="indigo" onClick={() => navigate('/admin')}>
-              <Shield size={16} /> Admin
+            <Button variant="secondary" onClick={() => navigate('/admin')}>
+              <Shield className="w-4 h-4 mr-2" /> Admin
             </Button>
           )}
-          <Button variant="soft" color="gray" onClick={() => navigate('/settings')}>
-            <SettingsIcon size={16} /> Settings
+          <Button variant="secondary" onClick={() => navigate('/settings')}>
+            <SettingsIcon className="w-4 h-4 mr-2" /> Settings
           </Button>
-          <Button variant="soft" onClick={loadChecks} disabled={loading}>
-            <RefreshCw size={16} /> Refresh
+          <Button variant="secondary" onClick={loadChecks} disabled={loading}>
+            <RefreshCw className="w-4 h-4 mr-2" /> Refresh
           </Button>
-          <Button variant="outline" color="red" onClick={handleLogout}>
-            <LogOut size={16} /> Logout
+          <Button variant="destructive" onClick={handleLogout}>
+            <LogOut className="w-4 h-4 mr-2" /> Logout
           </Button>
-        </Flex>
-      </Flex>
+        </div>
+      </div>
 
-      <Flex mb="6" direction="column" gap="2">
-        <TextField.Root
-          size="3"
+      <div className="mb-6 flex flex-col gap-2">
+        <Input
           placeholder="Quick Add: Type a check name and press Enter..."
           value={quickAddVal}
           onChange={(e) => setQuickAddVal(e.target.value)}
@@ -116,18 +125,12 @@ export default function Dashboard() {
             }
           }}
         />
-      </Flex>
+      </div>
 
       {checks.length === 0 && (
-        <Table.Root variant="surface">
-          <Table.Body>
-            <Table.Row>
-              <Table.Cell colSpan={5} style={{ textAlign: 'center' }}>
-                <Text color="gray">No checks found. Create your first check above!</Text>
-              </Table.Cell>
-            </Table.Row>
-          </Table.Body>
-        </Table.Root>
+        <div className="border rounded-md p-8 text-center text-muted-foreground">
+          No checks found. Create your first check above!
+        </div>
       )}
 
       {Object.entries(
@@ -142,55 +145,57 @@ export default function Dashboard() {
         if (g2 === 'Default') return -1;
         return g1.localeCompare(g2);
       }).map(([groupName, groupChecks]) => (
-        <Flex key={groupName} direction="column" mb="6" gap="3">
-          <Heading size="4">{groupName}</Heading>
-          <Table.Root variant="surface">
-            <Table.Header>
-              <Table.Row>
-                <Table.ColumnHeaderCell>Name</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Status</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Last Ping</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Interval</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Actions</Table.ColumnHeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {groupChecks.map(check => (
-                <Table.Row key={check.id} align="center">
-                  <Table.RowHeaderCell>
-                    <Flex direction="column" gap="1">
-                      <Flex align="center" gap="2">
-                        <Text>{check.name}</Text>
-                        {check.tags && check.tags.split(',').map(tag => tag.trim()).filter(Boolean).map(tag => (
-                          <Badge key={tag} size="1" color="gray">{tag}</Badge>
-                        ))}
-                      </Flex>
-                      {check.description && (
-                        <Text size="1" color="gray">{check.description}</Text>
-                      )}
-                    </Flex>
-                  </Table.RowHeaderCell>
-                  <Table.Cell>
-                    <Badge color={getStatusColor(check.status)}>{check.status}</Badge>
-                  </Table.Cell>
-                  <Table.Cell>
-                    {check.lastPing ? formatDistanceToNow(new Date(check.lastPing), { addSuffix: true }) : 'Never'}
-                  </Table.Cell>
-                  <Table.Cell>{(check.intervalSeconds / 60).toFixed(0)} min</Table.Cell>
-                  <Table.Cell>
-                    <Flex gap="2">
-                      <Button variant="outline" size="1" onClick={() => navigate(`/checks/${check.id}`)}>
-                        Details / Edit
-                      </Button>
-                    </Flex>
-                  </Table.Cell>
-                </Table.Row>
-              ))}
-            </Table.Body>
-          </Table.Root>
-        </Flex>
+        <div key={groupName} className="flex flex-col mb-6 gap-3">
+          <h2 className="text-xl font-semibold tracking-tight">{groupName}</h2>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Last Ping</TableHead>
+                  <TableHead>Interval</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {groupChecks.map(check => (
+                  <TableRow key={check.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span>{check.name}</span>
+                          {check.tags && check.tags.split(',').map(tag => tag.trim()).filter(Boolean).map(tag => (
+                            <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
+                          ))}
+                        </div>
+                        {check.description && (
+                          <span className="text-xs text-muted-foreground">{check.description}</span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusColor(check.status)}>{check.status}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {check.lastPing ? formatDistanceToNow(new Date(check.lastPing), { addSuffix: true }) : 'Never'}
+                    </TableCell>
+                    <TableCell>{(check.intervalSeconds / 60).toFixed(0)} min</TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => navigate(`/checks/${check.id}`)}>
+                          Details / Edit
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
       ))}
 
-    </Container>
+    </div>
   );
 }

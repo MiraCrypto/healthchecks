@@ -1,13 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { Theme } from '@radix-ui/themes';
-import '@radix-ui/themes/styles.css';
+import { ThemeProvider } from './components/theme-provider.js';
+import './index.css';
 import App from './App.js';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <Theme accentColor="indigo" radius="small" appearance="light">
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <App />
-    </Theme>
+    </ThemeProvider>
   </React.StrictMode>
 );

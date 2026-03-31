@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Heading, Text, Card, Flex, Button, Avatar } from '@radix-ui/themes';
 import { format } from 'date-fns';
 import { ArrowLeft } from 'lucide-react';
 import { ApiClient } from '../api/ApiClient.js';
 import { User } from '@healthchecks/shared';
+
+import { Button } from "@/components/ui/button.js";
+import { Card, CardContent } from "@/components/ui/card.js";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar.js";
 
 export default function Profile() {
   const { username } = useParams<{ username: string }>();
@@ -31,51 +34,59 @@ export default function Profile() {
 
   if (error) {
     return (
-      <Container size="2" py="6">
-        <Flex direction="column" gap="4" align="center">
-          <Text color="red">{error}</Text>
-          <Button variant="soft" onClick={() => navigate('/')}>Back to Dashboard</Button>
-        </Flex>
-      </Container>
+      <div className="container mx-auto py-6 max-w-2xl">
+        <div className="flex flex-col gap-4 items-center">
+          <span className="text-destructive">{error}</span>
+          <Button variant="secondary" onClick={() => navigate('/')}>Back to Dashboard</Button>
+        </div>
+      </div>
     );
   }
 
   if (!profile) {
     return (
-      <Container size="2" py="6">
-        <Text>Loading profile...</Text>
-      </Container>
+      <div className="container mx-auto py-6 max-w-2xl">
+        <span>Loading profile...</span>
+      </div>
     );
   }
 
   return (
-    <Container size="2" py="6">
-      <Flex mb="6" align="center" gap="3">
-        <Button variant="ghost" onClick={() => navigate('/')}><ArrowLeft size={16} /> Dashboard</Button>
-      </Flex>
-      <Card size="4">
-        <Flex direction="column" align="center" gap="4">
-          <Avatar
-            size="8"
-            fallback={profile.displayName ? profile.displayName[0].toUpperCase() : profile.username[0].toUpperCase()}
-            radius="full"
-          />
-          <Heading size="6">{profile.displayName || profile.username}</Heading>
-          <Text color="gray" size="3">@{profile.username}</Text>
+    <div className="container mx-auto py-6 max-w-2xl">
+      <div className="flex mb-6 items-center gap-3">
+        <Button variant="ghost" onClick={() => navigate('/')}>
+          <ArrowLeft className="w-4 h-4 mr-2" /> Dashboard
+        </Button>
+      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col items-center gap-4">
+            <Avatar className="w-24 h-24">
+              <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+                {profile.displayName ? profile.displayName[0].toUpperCase() : profile.username[0].toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              {profile.displayName || profile.username}
+            </h1>
+            <span className="text-muted-foreground text-lg">@{profile.username}</span>
 
-          {profile.description ? (
-            <Text mt="4" align="center" style={{ whiteSpace: 'pre-wrap' }}>
-              {profile.description}
-            </Text>
-          ) : (
-            <Text mt="4" color="gray" style={{ fontStyle: 'italic' }}>No description provided.</Text>
-          )}
+            {profile.description ? (
+              <p className="mt-4 text-center whitespace-pre-wrap">
+                {profile.description}
+              </p>
+            ) : (
+              <p className="mt-4 text-muted-foreground italic text-center">
+                No description provided.
+              </p>
+            )}
 
-          <Text size="2" color="gray" mt="6">
-            Joined {format(new Date(profile.createdAt), 'MMMM d, yyyy')}
-          </Text>
-        </Flex>
+            <span className="text-sm text-muted-foreground mt-6">
+              Joined {format(new Date(profile.createdAt), 'MMMM d, yyyy')}
+            </span>
+          </div>
+        </CardContent>
       </Card>
-    </Container>
+    </div>
   );
 }

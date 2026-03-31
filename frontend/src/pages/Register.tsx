@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Container, Card, Heading, Text, TextField, Button, Flex } from '@radix-ui/themes';
 import { ApiClient } from '../api/ApiClient.js';
+
+import { Button } from "@/components/ui/button.js";
+import { Input } from "@/components/ui/input.js";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card.js";
 
 export default function Register() {
   const [username, setUsername] = useState('');
@@ -20,21 +23,25 @@ export default function Register() {
   };
 
   return (
-    <Container size="1" style={{ paddingTop: '10vh' }}>
-      <Card size="4">
-        <Heading size="6" mb="4" align="center">Healthchecks - Register</Heading>
-        <form onSubmit={handleRegister}>
-          <Flex direction="column" gap="3">
-            <TextField.Root placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
-            <TextField.Root type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-            {error && <Text color="red" size="2">{error}</Text>}
-            <Button size="3" type="submit">Sign Up</Button>
-            <Text align="center" size="2" color="gray">
-              Already have an account? <Link to="/login">Sign In</Link>
-            </Text>
-          </Flex>
-        </form>
+    <div className="container mx-auto max-w-sm pt-[10vh]">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-center text-xl">Healthchecks - Register</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleRegister}>
+            <div className="flex flex-col gap-4">
+              <Input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
+              <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <Button type="submit" className="w-full">Sign Up</Button>
+              <p className="text-center text-sm text-muted-foreground">
+                Already have an account? <Link to="/login" className="hover:underline text-primary">Sign In</Link>
+              </p>
+            </div>
+          </form>
+        </CardContent>
       </Card>
-    </Container>
+    </div>
   );
 }

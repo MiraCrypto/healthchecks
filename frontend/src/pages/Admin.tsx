@@ -1,10 +1,38 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Heading, Table, Badge, Button, Flex, Text, Dialog, TextField, Select, Callout } from '@radix-ui/themes';
 import { Plus, ArrowLeft, RefreshCw, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { User } from '@healthchecks/shared';
 import { ApiClient } from '../api/ApiClient.js';
+
+import { Button } from "@/components/ui/button.js";
+import { Badge } from "@/components/ui/badge.js";
+import { Input } from "@/components/ui/input.js";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table.js";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog.js";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.js";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.js";
 
 export default function Admin() {
   const [users, setUsers] = useState<User[]>([]);
@@ -44,71 +72,78 @@ export default function Admin() {
 
   if (error) {
     return (
-      <Container size="4" py="6">
-        <Flex direction="column" align="center" gap="4">
-          <Callout.Root color="red">
-            <Callout.Icon><AlertCircle size={16} /></Callout.Icon>
-            <Callout.Text>{error}</Callout.Text>
-          </Callout.Root>
+      <div className="container mx-auto py-6 max-w-5xl">
+        <div className="flex flex-col items-center gap-4">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
           <Button onClick={() => navigate('/')}>Back to Dashboard</Button>
-        </Flex>
-      </Container>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Container size="4" py="6">
-      <Flex mb="6" align="center" gap="3">
-        <Button variant="ghost" onClick={() => navigate('/')}><ArrowLeft size={16} /> Dashboard</Button>
-      </Flex>
+    <div className="container mx-auto py-6 max-w-5xl">
+      <div className="flex mb-6 items-center gap-3">
+        <Button variant="ghost" onClick={() => navigate('/')}>
+          <ArrowLeft className="w-4 h-4 mr-2" /> Dashboard
+        </Button>
+      </div>
 
-      <Flex justify="between" align="center" mb="6">
-        <Heading size="8">User Management</Heading>
-        <Flex gap="3" align="center">
-          <Button variant="soft" onClick={loadUsers} disabled={loading}>
-            <RefreshCw size={16} /> Refresh
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-4xl font-bold tracking-tight">User Management</h1>
+        <div className="flex gap-3 items-center">
+          <Button variant="secondary" onClick={loadUsers} disabled={loading}>
+            <RefreshCw className="w-4 h-4 mr-2" /> Refresh
           </Button>
           <CreateUserDialog onCreated={loadUsers} />
-        </Flex>
-      </Flex>
+        </div>
+      </div>
 
-      <Table.Root variant="surface">
-        <Table.Header>
-          <Table.Row>
-            <Table.ColumnHeaderCell>Username</Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell>Display Name</Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell>Role</Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell>Joined</Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell>Actions</Table.ColumnHeaderCell>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {users.map(u => (
-            <Table.Row key={u.id} align="center">
-              <Table.RowHeaderCell>
-                <a href={`/u/${u.username}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <strong>{u.username}</strong>
-                </a>
-              </Table.RowHeaderCell>
-              <Table.Cell>{u.displayName || '-'}</Table.Cell>
-              <Table.Cell>
-                <Badge color={u.role === 'ADMIN' ? 'ruby' : 'blue'}>{u.role}</Badge>
-              </Table.Cell>
-              <Table.Cell>{format(new Date(u.createdAt), 'MMM d, yyyy')}</Table.Cell>
-              <Table.Cell>
-                <Select.Root value={u.role} onValueChange={(val: 'USER'|'ADMIN') => handleRoleChange(u.id, val)}>
-                  <Select.Trigger />
-                  <Select.Content>
-                    <Select.Item value="USER">User</Select.Item>
-                    <Select.Item value="ADMIN">Admin</Select.Item>
-                  </Select.Content>
-                </Select.Root>
-              </Table.Cell>
-            </Table.Row>
-          ))}
-        </Table.Body>
-      </Table.Root>
-    </Container>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Username</TableHead>
+              <TableHead>Display Name</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Joined</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.map(u => (
+              <TableRow key={u.id}>
+                <TableCell className="font-medium">
+                  <a href={`/u/${u.username}`} className="hover:underline">
+                    {u.username}
+                  </a>
+                </TableCell>
+                <TableCell>{u.displayName || '-'}</TableCell>
+                <TableCell>
+                  <Badge variant={u.role === 'ADMIN' ? 'destructive' : 'default'}>{u.role}</Badge>
+                </TableCell>
+                <TableCell>{format(new Date(u.createdAt), 'MMM d, yyyy')}</TableCell>
+                <TableCell>
+                  <Select value={u.role} onValueChange={(val: 'USER'|'ADMIN') => handleRoleChange(u.id, val)}>
+                    <SelectTrigger className="w-[120px]">
+                      <SelectValue placeholder="Role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USER">User</SelectItem>
+                      <SelectItem value="ADMIN">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
   );
 }
 
@@ -117,6 +152,7 @@ function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
   const [password, setPassword] = useState<string>('');
   const [role, setRole] = useState<'USER' | 'ADMIN'>('USER');
   const [error, setError] = useState<string>('');
+  const [open, setOpen] = useState(false);
 
   const handleSubmit = async () => {
     if (!username.trim() || !password.trim()) return;
@@ -126,6 +162,7 @@ function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
       setUsername('');
       setPassword('');
       setRole('USER');
+      setOpen(false);
       onCreated();
     } catch (err) {
       setError((err as Error).message || 'Error creating user');
@@ -133,45 +170,49 @@ function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
   };
 
   return (
-    <Dialog.Root>
-      <Dialog.Trigger>
-        <Button><Plus size={16} /> Add User</Button>
-      </Dialog.Trigger>
-      <Dialog.Content style={{ maxWidth: 450 }}>
-        <Dialog.Title>Create New User</Dialog.Title>
-        <Dialog.Description size="2" mb="4">
-          Add a new user directly to the platform.
-        </Dialog.Description>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button><Plus className="w-4 h-4 mr-2" /> Add User</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[450px]">
+        <DialogHeader>
+          <DialogTitle>Create New User</DialogTitle>
+          <DialogDescription>
+            Add a new user directly to the platform.
+          </DialogDescription>
+        </DialogHeader>
 
-        <Flex direction="column" gap="3">
-          <label>
-            <Text as="div" size="2" mb="1" weight="bold">Username</Text>
-            <TextField.Root value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username" />
+        <div className="flex flex-col gap-3 py-4">
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-bold">Username</span>
+            <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username" />
           </label>
-          <label>
-            <Text as="div" size="2" mb="1" weight="bold">Password</Text>
-            <TextField.Root type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-bold">Password</span>
+            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
           </label>
-          <label>
-            <Text as="div" size="2" mb="1" weight="bold">Role</Text>
-            <Select.Root value={role} onValueChange={(val: 'USER'|'ADMIN') => setRole(val)}>
-              <Select.Trigger style={{ width: '100%' }} />
-              <Select.Content>
-                <Select.Item value="USER">User</Select.Item>
-                <Select.Item value="ADMIN">Admin</Select.Item>
-              </Select.Content>
-            </Select.Root>
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-bold">Role</span>
+            <Select value={role} onValueChange={(val: 'USER'|'ADMIN') => setRole(val)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="USER">User</SelectItem>
+                <SelectItem value="ADMIN">Admin</SelectItem>
+              </SelectContent>
+            </Select>
           </label>
-        </Flex>
+        </div>
 
-        <Flex gap="3" mt="4" justify="end" align="center">
-          {error && <Text color="red" size="2" mr="auto">{error}</Text>}
-          <Dialog.Close>
-            <Button variant="soft" color="gray">Cancel</Button>
-          </Dialog.Close>
+        <div className="flex gap-3 justify-end items-center mt-4">
+          {error && <span className="text-sm text-destructive mr-auto">{error}</span>}
+          <DialogClose asChild>
+            <Button variant="secondary">Cancel</Button>
+          </DialogClose>
           <Button onClick={handleSubmit}>Create</Button>
-        </Flex>
-      </Dialog.Content>
-    </Dialog.Root>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
