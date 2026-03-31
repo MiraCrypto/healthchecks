@@ -79,6 +79,7 @@ export const UpdateCheckSchema = z.object({
   graceSeconds: z.number().int().min(60).optional(),
   runbook: z.string().nullable().optional(),
   group: z.string().nullable().optional(),
+  status: z.enum(['UP', 'DOWN', 'NEW', 'PAUSED']).optional(),
 });
 export type UpdateCheckDTO = z.infer<typeof UpdateCheckSchema>;
 

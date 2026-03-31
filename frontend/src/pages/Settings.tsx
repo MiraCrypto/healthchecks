@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Heading, Flex, Button, TextField, Text, TextArea, Callout } from '@radix-ui/themes';
+import { Container, Heading, Flex, Button, TextField, Text, TextArea, Callout, Card } from '@radix-ui/themes';
 import { ArrowLeft, Check, AlertCircle } from 'lucide-react';
 import { ApiClient } from '../api/ApiClient.js';
 
@@ -66,88 +66,96 @@ export default function Settings() {
   };
 
   return (
-    <Container size="3" py="6">
+    <Container size="2" py="6">
       <Flex mb="6" align="center" gap="3">
-        <Button variant="ghost" onClick={() => navigate('/')}><ArrowLeft size={16} /> Dashboard</Button>
+        <Button variant="ghost" color="gray" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}><ArrowLeft size={16} /> Back</Button>
       </Flex>
 
-      <Heading size="8" mb="6">Settings</Heading>
+      <Heading size="8" mb="6" style={{ color: 'var(--slate-12)' }}>Settings</Heading>
 
-      <Flex direction="column" gap="8">
+      <Flex direction="column" gap="6">
         {/* Profile Form */}
-        <Flex direction="column" gap="4">
-          <Heading size="5">Profile</Heading>
+        <Card size="4" variant="surface">
+          <Flex direction="column" gap="5">
+            <Heading size="5" style={{ color: 'var(--slate-12)' }}>Profile</Heading>
 
-          {profileMessage && (
-            <Callout.Root color={profileMessage.type === 'success' ? 'green' : 'red'}>
-              <Callout.Icon>{profileMessage.type === 'success' ? <Check size={16}/> : <AlertCircle size={16}/>}</Callout.Icon>
-              <Callout.Text>{profileMessage.text}</Callout.Text>
-            </Callout.Root>
-          )}
+            {profileMessage && (
+              <Callout.Root color={profileMessage.type === 'success' ? 'green' : 'ruby'} variant="surface">
+                <Callout.Icon>{profileMessage.type === 'success' ? <Check size={16}/> : <AlertCircle size={16}/>}</Callout.Icon>
+                <Callout.Text>{profileMessage.text}</Callout.Text>
+              </Callout.Root>
+            )}
 
-          <form onSubmit={handleUpdateProfile}>
-            <Flex direction="column" gap="4">
-              <label>
-                <Text as="div" size="2" mb="1" weight="bold">Display Name</Text>
-                <TextField.Root
-                  value={displayName}
-                  onChange={e => setDisplayName(e.target.value)}
-                  placeholder="John Doe"
-                />
-              </label>
+            <form onSubmit={handleUpdateProfile}>
+              <Flex direction="column" gap="4">
+                <label>
+                  <Text as="div" size="2" mb="2" weight="medium">Display Name</Text>
+                  <TextField.Root
+                    size="3"
+                    value={displayName}
+                    onChange={e => setDisplayName(e.target.value)}
+                    placeholder="John Doe"
+                  />
+                </label>
 
-              <label>
-                <Text as="div" size="2" mb="1" weight="bold">Description</Text>
-                <TextArea
-                  value={description}
-                  onChange={e => setDescription(e.target.value)}
-                  placeholder="Tell us about yourself..."
-                  style={{ minHeight: 100 }}
-                />
-              </label>
+                <label>
+                  <Text as="div" size="2" mb="2" weight="medium">Description</Text>
+                  <TextArea
+                    size="3"
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    placeholder="Tell us about yourself..."
+                    style={{ minHeight: 120 }}
+                  />
+                </label>
 
-              <Button type="submit" mt="2" style={{ alignSelf: 'flex-start' }}>Save Profile</Button>
-            </Flex>
-          </form>
-        </Flex>
+                <Button size="3" variant="solid" type="submit" mt="2" style={{ alignSelf: 'flex-start', cursor: 'pointer' }}>Save Profile</Button>
+              </Flex>
+            </form>
+          </Flex>
+        </Card>
 
         {/* Password Form */}
-        <Flex direction="column" gap="4">
-          <Heading size="5">Change Password</Heading>
+        <Card size="4" variant="surface">
+          <Flex direction="column" gap="5">
+            <Heading size="5" style={{ color: 'var(--slate-12)' }}>Change Password</Heading>
 
-          {passwordMessage && (
-            <Callout.Root color={passwordMessage.type === 'success' ? 'green' : 'red'}>
-              <Callout.Icon>{passwordMessage.type === 'success' ? <Check size={16}/> : <AlertCircle size={16}/>}</Callout.Icon>
-              <Callout.Text>{passwordMessage.text}</Callout.Text>
-            </Callout.Root>
-          )}
+            {passwordMessage && (
+              <Callout.Root color={passwordMessage.type === 'success' ? 'green' : 'ruby'} variant="surface">
+                <Callout.Icon>{passwordMessage.type === 'success' ? <Check size={16}/> : <AlertCircle size={16}/>}</Callout.Icon>
+                <Callout.Text>{passwordMessage.text}</Callout.Text>
+              </Callout.Root>
+            )}
 
-          <form onSubmit={handleChangePassword}>
-            <Flex direction="column" gap="4">
-              <label>
-                <Text as="div" size="2" mb="1" weight="bold">Current Password</Text>
-                <TextField.Root
-                  type="password"
-                  value={currentPassword}
-                  onChange={e => setCurrentPassword(e.target.value)}
-                  placeholder="••••••••"
-                />
-              </label>
+            <form onSubmit={handleChangePassword}>
+              <Flex direction="column" gap="4">
+                <label>
+                  <Text as="div" size="2" mb="2" weight="medium">Current Password</Text>
+                  <TextField.Root
+                    size="3"
+                    type="password"
+                    value={currentPassword}
+                    onChange={e => setCurrentPassword(e.target.value)}
+                    placeholder="••••••••"
+                  />
+                </label>
 
-              <label>
-                <Text as="div" size="2" mb="1" weight="bold">New Password</Text>
-                <TextField.Root
-                  type="password"
-                  value={newPassword}
-                  onChange={e => setNewPassword(e.target.value)}
-                  placeholder="••••••••"
-                />
-              </label>
+                <label>
+                  <Text as="div" size="2" mb="2" weight="medium">New Password</Text>
+                  <TextField.Root
+                    size="3"
+                    type="password"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    placeholder="••••••••"
+                  />
+                </label>
 
-              <Button type="submit" mt="2" color="ruby" style={{ alignSelf: 'flex-start' }}>Update Password</Button>
-            </Flex>
-          </form>
-        </Flex>
+                <Button size="3" variant="solid" type="submit" mt="2" color="ruby" style={{ alignSelf: 'flex-start', cursor: 'pointer' }}>Update Password</Button>
+              </Flex>
+            </form>
+          </Flex>
+        </Card>
       </Flex>
     </Container>
   );

@@ -39,21 +39,21 @@ function PayloadViewer({ pingId }: { pingId: string }) {
     return () => { isMounted = false; };
   }, [pingId]);
 
-  if (loading) return <Text color="gray">Loading payload...</Text>;
-  if (error) return <Text color="red">{error}</Text>;
+  if (loading) return <Text color="gray" size="2">Loading payload...</Text>;
+  if (error) return <Text color="ruby" size="2">{error}</Text>;
 
   const isText = contentType.includes('text/') || contentType.includes('application/json');
 
   return (
-    <Box mt="2" mb="4">
+    <Box mt="3" mb="4">
       {isText ? (
         <ScrollArea type="always" scrollbars="both" style={{ maxHeight: 300 }}>
-          <Box style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontFamily: 'monospace', fontSize: 'var(--font-size-2)', backgroundColor: 'var(--gray-3)', padding: 'var(--space-3)', borderRadius: 'var(--radius-2)' }}>
-            {content}
+          <Box style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontFamily: 'var(--font-mono)', fontSize: '13px', backgroundColor: 'var(--surface-2)', border: '1px solid var(--gray-5)', padding: 'var(--space-4)', borderRadius: 'var(--radius-3)', color: 'var(--slate-12)' }}>
+            {content || <Text color="gray" style={{ fontStyle: 'italic' }}>Empty payload</Text>}
           </Box>
         </ScrollArea>
       ) : (
-        <Text color="gray" style={{ fontStyle: 'italic' }}>
+        <Text color="gray" size="2" style={{ fontStyle: 'italic' }}>
           {content}
         </Text>
       )}
@@ -69,6 +69,7 @@ export default function CheckDetails() {
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedPingForPayload, setSelectedPingForPayload] = useState<Ping | null>(null);
   const [error, setError] = useState<string>('');
+  const [actionLoading, setActionLoading] = useState(false);
 
   // Editable settings state
   const [name, setName] = useState('');
@@ -183,7 +184,7 @@ export default function CheckDetails() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'UP': return 'green';
-      case 'DOWN': return 'red';
+      case 'DOWN': return 'ruby';
       case 'PAUSED': return 'amber';
       default: return 'gray';
     }
@@ -191,30 +192,76 @@ export default function CheckDetails() {
 
   const pingUrl = `${window.location.origin}/ping/${check.id}`;
 
+  const handleCopyUrl = () => {
+    navigator.clipboard.writeText(pingUrl);
+  };
+
+  const handleResume = async () => {
+    setActionLoading(true);
+    try {
+      await ApiClient.updateCheck(check.id, { status: 'UP' });
+      loadData();
+    } catch (err) {
+      setError((err as Error).message || 'Error resuming check');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handlePause = async () => {
+    setActionLoading(true);
+    try {
+      await ApiClient.updateCheck(check.id, { status: 'PAUSED' });
+      loadData();
+    } catch (err) {
+      setError((err as Error).message || 'Error pausing check');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   return (
     <Container size="4" py="6">
-      <Flex align="center" justify="between" mb="6">
-        <Flex align="center" gap="3">
-          <Button variant="ghost" onClick={() => navigate('/')}>
-            <ArrowLeft size={16} /> Back to Dashboard
-          </Button>
+      <Flex mb="8" justify="between" align="center">
+        <Flex gap="4" align="center">
+          <Button variant="ghost" onClick={() => navigate('/')} color="gray" style={{ cursor: 'pointer' }}><ArrowLeft size={16} /> Back</Button>
           <Heading size="7">{check.name}</Heading>
-          <Badge size="2" color={getStatusColor(check.status)}>{check.status}</Badge>
+          <Badge color={getStatusColor(check.status)} radius="full" size="2">{check.status}</Badge>
         </Flex>
-        <Flex align="center" gap="3">
-          {error && <Text color="red" size="2">{error}</Text>}
-          <Button color="red" variant="soft" onClick={handleDelete}>
-            <Trash2 size={16} /> Delete Check
-          </Button>
+        <Flex gap="3">
+          {check.status === 'PAUSED' ? (
+            <Button variant="soft" color="green" onClick={handleResume} disabled={actionLoading} style={{ cursor: 'pointer' }}>Resume</Button>
+          ) : (
+            <Button variant="soft" color="amber" onClick={handlePause} disabled={actionLoading} style={{ cursor: 'pointer' }}>Pause</Button>
+          )}
+          <Dialog.Root>
+            <Dialog.Trigger>
+              <Button variant="soft" color="ruby" style={{ cursor: 'pointer' }}><Trash2 size={16} /> Delete</Button>
+            </Dialog.Trigger>
+            <Dialog.Content style={{ maxWidth: 450 }}>
+              <Dialog.Title>Delete Check</Dialog.Title>
+              <Dialog.Description size="2" mb="4">
+                Are you sure you want to delete this check? This action cannot be undone.
+              </Dialog.Description>
+              <Flex gap="3" justify="end">
+                <Dialog.Close>
+                  <Button variant="soft" color="gray" style={{ cursor: 'pointer' }}>Cancel</Button>
+                </Dialog.Close>
+                <Dialog.Close>
+                  <Button variant="solid" color="ruby" onClick={handleDelete} disabled={actionLoading} style={{ cursor: 'pointer' }}>Delete</Button>
+                </Dialog.Close>
+              </Flex>
+            </Dialog.Content>
+          </Dialog.Root>
         </Flex>
       </Flex>
 
-      <Grid columns="2" gap="6">
+      <Grid columns={{ initial: '1', md: '2' }} gap="6">
         <Box>
-          <Card size="3" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <Card size="3" variant="surface" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             <Flex justify="between" align="center" mb="3">
-              <Heading size="4">Runbook</Heading>
-              <Button onClick={handleSaveRunbook} disabled={runbookSaving} size="1" variant="soft">
+              <Heading size="4" style={{ color: 'var(--slate-12)' }}>Runbook</Heading>
+              <Button onClick={handleSaveRunbook} disabled={runbookSaving} size="1" variant="soft" color="iris" style={{ cursor: 'pointer' }}>
                 <Save size={14} /> Save Runbook
               </Button>
             </Flex>
@@ -224,7 +271,7 @@ export default function CheckDetails() {
 
             {runbookMessage && (
               <Box mb="4">
-                <Callout.Root color={runbookMessage.type === 'error' ? 'red' : 'green'}>
+                <Callout.Root color={runbookMessage.type === 'error' ? 'ruby' : 'green'} variant="surface">
                   <Callout.Icon>
                     {runbookMessage.type === 'error' ? <AlertCircle size={16} /> : <CheckCircle size={16} />}
                   </Callout.Icon>
@@ -236,65 +283,69 @@ export default function CheckDetails() {
             )}
 
             <TextArea
+              size="3"
               value={runbook}
               onChange={(e) => setRunbook(e.target.value)}
               placeholder="# Incident Response Plan..."
-              style={{ flex: 1, minHeight: '400px', whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}
+              style={{ flex: 1, minHeight: '400px', whiteSpace: 'pre-wrap', fontFamily: 'var(--font-mono)' }}
             />
           </Card>
         </Box>
 
         <Flex direction="column" gap="4">
-          <Card size="3">
-            <Heading size="4" mb="3">Ping URL</Heading>
-            <Card variant="surface" style={{ padding: '8px 12px', fontFamily: 'monospace', marginBottom: '16px' }}>
-              {pingUrl}
-            </Card>
+          <Card size="3" variant="surface">
+            <Heading size="4" mb="4" style={{ color: 'var(--slate-12)' }}>Integration</Heading>
+            <Flex gap="2" align="center" style={{ backgroundColor: 'var(--surface-2)', padding: '12px 16px', borderRadius: 'var(--radius-3)', border: '1px solid var(--gray-5)', marginBottom: '16px' }}>
+              <Box style={{ flex: 1, overflowX: 'auto', whiteSpace: 'nowrap' }}>
+                <Text size="2" style={{ fontFamily: 'var(--font-mono)', color: 'var(--slate-11)' }}>{pingUrl}</Text>
+              </Box>
+              <Button variant="ghost" color="gray" onClick={handleCopyUrl} style={{ cursor: 'pointer' }}><Copy size={16} /></Button>
+            </Flex>
 
-            <Flex align="center" justify="between" mb="3">
-              <Heading size="4">Settings</Heading>
+            <Flex align="center" justify="between" mb="4">
+              <Heading size="4" style={{ color: 'var(--slate-12)' }}>Settings</Heading>
               <Box>
                 <Text as="div" size="1" color="gray" align="right">Created At</Text>
                 <Text size="2">{format(new Date(check.createdAt), 'MMM d, yyyy')}</Text>
               </Box>
             </Flex>
-            <Flex direction="column" gap="4" mb="4">
+            <Flex direction="column" gap="4" mb="5">
               <label>
-                <Text as="div" size="2" mb="1" weight="bold">Name</Text>
-                <TextField.Root value={name} onChange={(e) => setName(e.target.value)} placeholder="Check Name" />
+                <Text as="div" size="2" mb="2" weight="medium">Name</Text>
+                <TextField.Root size="3" value={name} onChange={(e) => setName(e.target.value)} placeholder="Check Name" />
               </label>
 
               <label>
-                <Text as="div" size="2" mb="1" weight="bold">Description</Text>
-                <TextArea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief context about this check" />
+                <Text as="div" size="2" mb="2" weight="medium">Description</Text>
+                <TextArea size="3" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief context about this check" />
               </label>
 
-              <Grid columns="2" gap="3">
+              <Grid columns="2" gap="4">
                 <label>
-                  <Text as="div" size="2" mb="1" weight="bold">Group</Text>
-                  <TextField.Root value={group} onChange={(e) => setGroup(e.target.value)} placeholder="e.g. Production" />
+                  <Text as="div" size="2" mb="2" weight="medium">Group</Text>
+                  <TextField.Root size="3" value={group} onChange={(e) => setGroup(e.target.value)} placeholder="e.g. Production" />
                 </label>
                 <label>
-                  <Text as="div" size="2" mb="1" weight="bold">Tags (comma separated)</Text>
-                  <TextField.Root value={tags} onChange={(e) => setTags(e.target.value)} placeholder="web, db, critical" />
+                  <Text as="div" size="2" mb="2" weight="medium">Tags (comma separated)</Text>
+                  <TextField.Root size="3" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="web, db" />
                 </label>
               </Grid>
 
-              <Grid columns="2" gap="3">
+              <Grid columns="2" gap="4">
                 <label>
-                  <Text as="div" size="2" mb="1" weight="bold">Interval (minutes)</Text>
-                  <TextField.Root type="number" min="1" value={intervalMin} onChange={(e) => setIntervalMin(parseInt(e.target.value) || 1)} />
+                  <Text as="div" size="2" mb="2" weight="medium">Interval (minutes)</Text>
+                  <TextField.Root size="3" type="number" min="1" value={intervalMin} onChange={(e) => setIntervalMin(parseInt(e.target.value) || 1)} />
                 </label>
                 <label>
-                  <Text as="div" size="2" mb="1" weight="bold">Grace Period (minutes)</Text>
-                  <TextField.Root type="number" min="1" value={graceMin} onChange={(e) => setGraceMin(parseInt(e.target.value) || 1)} />
+                  <Text as="div" size="2" mb="2" weight="medium">Grace Period (minutes)</Text>
+                  <TextField.Root size="3" type="number" min="1" value={graceMin} onChange={(e) => setGraceMin(parseInt(e.target.value) || 1)} />
                 </label>
               </Grid>
             </Flex>
 
             {settingsMessage && (
-              <Box mb="4">
-                <Callout.Root color={settingsMessage.type === 'error' ? 'red' : 'green'}>
+              <Box mb="5">
+                <Callout.Root color={settingsMessage.type === 'error' ? 'ruby' : 'green'} variant="surface">
                   <Callout.Icon>
                     {settingsMessage.type === 'error' ? <AlertCircle size={16} /> : <CheckCircle size={16} />}
                   </Callout.Icon>
@@ -305,14 +356,14 @@ export default function CheckDetails() {
               </Box>
             )}
 
-            <Button onClick={handleSaveSettings} disabled={settingsSaving} variant="soft">
+            <Button onClick={handleSaveSettings} disabled={settingsSaving} variant="solid" size="3" style={{ cursor: 'pointer' }}>
               <Save size={16} /> Save Settings
             </Button>
           </Card>
 
-          <Card size="3">
-            <Heading size="4" mb="3">Recent Pings</Heading>
-            <Table.Root variant="surface">
+          <Card size="3" variant="surface" style={{ height: '100%' }}>
+            <Heading size="4" mb="4" style={{ color: 'var(--slate-12)' }}>Recent Pings</Heading>
+            <Table.Root variant="surface" size="2">
               <Table.Header>
                 <Table.Row>
                   <Table.ColumnHeaderCell>Time</Table.ColumnHeaderCell>
@@ -323,18 +374,18 @@ export default function CheckDetails() {
               <Table.Body>
                 {pings.length === 0 && (
                   <Table.Row>
-                    <Table.Cell colSpan={3} style={{ textAlign: 'center' }}>
+                    <Table.Cell colSpan={3} style={{ textAlign: 'center', padding: '2rem' }}>
                       <Text color="gray">No pings received yet.</Text>
                     </Table.Cell>
                   </Table.Row>
                 )}
                 {pings.map(ping => (
                   <Table.Row key={ping.id}>
-                    <Table.Cell>{format(new Date(ping.createdAt), 'PPpp')}</Table.Cell>
-                    <Table.Cell>{formatDistanceToNow(new Date(ping.createdAt), { addSuffix: true })}</Table.Cell>
+                    <Table.Cell><Text size="2">{format(new Date(ping.createdAt), 'PPpp')}</Text></Table.Cell>
+                    <Table.Cell><Text size="2" color="gray">{formatDistanceToNow(new Date(ping.createdAt), { addSuffix: true })}</Text></Table.Cell>
                     <Table.Cell>
                       {ping.hasPayload ? (
-                        <Button variant="soft" size="1" onClick={() => setSelectedPingForPayload(ping)}>
+                        <Button variant="soft" color="gray" size="1" onClick={() => setSelectedPingForPayload(ping)} style={{ cursor: 'pointer' }}>
                           <FileText size={14} /> View
                         </Button>
                       ) : (
@@ -358,13 +409,14 @@ export default function CheckDetails() {
 
           {selectedPingForPayload && <PayloadViewer pingId={selectedPingForPayload.id} />}
 
-          <Flex gap="3" mt="4" justify="end">
+          <Flex gap="3" mt="5" justify="end">
             {selectedPingForPayload && (
               <>
                 <Button
                   variant="soft"
-                  color="blue"
+                  color="iris"
                   onClick={() => navigator.clipboard.writeText(`${window.location.origin}/payload/${selectedPingForPayload.id}`)}
+                  style={{ cursor: 'pointer' }}
                 >
                   <Copy size={16} /> Copy Permlink
                 </Button>
@@ -372,13 +424,14 @@ export default function CheckDetails() {
                   variant="soft"
                   color="gray"
                   onClick={() => window.open(`/payload/${selectedPingForPayload.id}`, '_blank')}
+                  style={{ cursor: 'pointer' }}
                 >
                   <ExternalLink size={16} /> Open in New Tab
                 </Button>
               </>
             )}
             <Dialog.Close>
-              <Button variant="soft" color="gray">Close</Button>
+              <Button variant="soft" color="gray" style={{ cursor: 'pointer' }}>Close</Button>
             </Dialog.Close>
           </Flex>
         </Dialog.Content>

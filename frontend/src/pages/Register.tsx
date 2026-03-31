@@ -20,21 +20,23 @@ export default function Register() {
   };
 
   return (
-    <Container size="1" style={{ paddingTop: '10vh' }}>
-      <Card size="4">
-        <Heading size="6" mb="4" align="center">Healthchecks - Register</Heading>
-        <form onSubmit={handleRegister}>
-          <Flex direction="column" gap="3">
-            <TextField.Root placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
-            <TextField.Root type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-            {error && <Text color="red" size="2">{error}</Text>}
-            <Button size="3" type="submit">Sign Up</Button>
-            <Text align="center" size="2" color="gray">
-              Already have an account? <Link to="/login">Sign In</Link>
-            </Text>
-          </Flex>
-        </form>
-      </Card>
-    </Container>
+    <Flex align="center" justify="center" style={{ minHeight: '100vh', padding: '1rem' }}>
+      <Container size="2">
+        <Card size="4" variant="surface">
+          <Heading size="6" mb="6" align="center">Healthchecks - Register</Heading>
+          <form onSubmit={handleRegister}>
+            <Flex direction="column" gap="4">
+              <TextField.Root size="3" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
+              <TextField.Root size="3" type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              {error && <Text color="ruby" size="2" align="center">{error}</Text>}
+              <Button size="4" variant="solid" type="submit" highContrast>Sign Up</Button>
+              <Text align="center" size="2" color="gray">
+                Already have an account? <Link to="/login" style={{ color: 'var(--accent-9)', textDecoration: 'none', fontWeight: 500 }}>Sign In</Link>
+              </Text>
+            </Flex>
+          </form>
+        </Card>
+      </Container>
+    </Flex>
   );
 }

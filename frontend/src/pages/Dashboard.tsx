@@ -73,33 +73,34 @@ export default function Dashboard() {
         <Flex gap="3" align="center">
           {user && (
             <Text size="2" color="gray" mr="2">
-              Welcome, <a href={`/u/${user.username}`} style={{ textDecoration: 'none', color: 'inherit' }}><strong>{user.username}</strong></a>
+              Welcome, <a href={`/u/${user.username}`} style={{ color: 'var(--accent-9)', textDecoration: 'none', fontWeight: 500 }}>{user.username}</a>
             </Text>
           )}
           {user?.role === 'ADMIN' && (
-            <Button variant="soft" color="indigo" onClick={() => navigate('/admin')}>
+            <Button variant="soft" color="ruby" onClick={() => navigate('/admin')} style={{ cursor: 'pointer' }}>
               <Shield size={16} /> Admin
             </Button>
           )}
-          <Button variant="soft" color="gray" onClick={() => navigate('/settings')}>
+          <Button variant="soft" color="gray" onClick={() => navigate('/settings')} style={{ cursor: 'pointer' }}>
             <SettingsIcon size={16} /> Settings
           </Button>
-          <Button variant="soft" onClick={loadChecks} disabled={loading}>
+          <Button variant="soft" color="iris" onClick={loadChecks} disabled={loading} style={{ cursor: 'pointer' }}>
             <RefreshCw size={16} /> Refresh
           </Button>
-          <Button variant="outline" color="red" onClick={handleLogout}>
+          <Button variant="soft" color="ruby" onClick={handleLogout} style={{ cursor: 'pointer' }}>
             <LogOut size={16} /> Logout
           </Button>
         </Flex>
       </Flex>
 
-      <Flex mb="6" direction="column" gap="2">
+      <Flex mb="8" direction="column" gap="2">
         <TextField.Root
           size="3"
           placeholder="Quick Add: Type a check name and press Enter..."
           value={quickAddVal}
           onChange={(e) => setQuickAddVal(e.target.value)}
           disabled={quickAddLoading}
+          style={{ padding: '0.5rem', borderRadius: 'var(--radius-3)' }}
           onKeyDown={async (e) => {
             if (e.key === 'Enter' && quickAddVal.trim()) {
               setQuickAddLoading(true);
@@ -119,11 +120,11 @@ export default function Dashboard() {
       </Flex>
 
       {checks.length === 0 && (
-        <Table.Root variant="surface">
+        <Table.Root variant="surface" size="3">
           <Table.Body>
             <Table.Row>
-              <Table.Cell colSpan={5} style={{ textAlign: 'center' }}>
-                <Text color="gray">No checks found. Create your first check above!</Text>
+              <Table.Cell colSpan={5} style={{ textAlign: 'center', padding: '2rem' }}>
+                <Text color="gray" size="3">No checks found. Create your first check above!</Text>
               </Table.Cell>
             </Table.Row>
           </Table.Body>
@@ -142,9 +143,9 @@ export default function Dashboard() {
         if (g2 === 'Default') return -1;
         return g1.localeCompare(g2);
       }).map(([groupName, groupChecks]) => (
-        <Flex key={groupName} direction="column" mb="6" gap="3">
-          <Heading size="4">{groupName}</Heading>
-          <Table.Root variant="surface">
+        <Flex key={groupName} direction="column" mb="8" gap="4">
+          <Heading size="5" style={{ color: 'var(--slate-11)' }}>{groupName}</Heading>
+          <Table.Root variant="surface" size="3">
             <Table.Header>
               <Table.Row>
                 <Table.ColumnHeaderCell>Name</Table.ColumnHeaderCell>
@@ -160,26 +161,32 @@ export default function Dashboard() {
                   <Table.RowHeaderCell>
                     <Flex direction="column" gap="1">
                       <Flex align="center" gap="2">
-                        <Text>{check.name}</Text>
+                        <Text weight="medium">{check.name}</Text>
                         {check.tags && check.tags.split(',').map(tag => tag.trim()).filter(Boolean).map(tag => (
-                          <Badge key={tag} size="1" color="gray">{tag}</Badge>
+                          <Badge key={tag} size="1" color="gray" radius="full">{tag}</Badge>
                         ))}
                       </Flex>
                       {check.description && (
-                        <Text size="1" color="gray">{check.description}</Text>
+                        <Text size="2" color="gray">{check.description}</Text>
                       )}
                     </Flex>
                   </Table.RowHeaderCell>
                   <Table.Cell>
-                    <Badge color={getStatusColor(check.status)}>{check.status}</Badge>
+                    <Badge color={getStatusColor(check.status)} radius="full" size="2">{check.status}</Badge>
                   </Table.Cell>
                   <Table.Cell>
-                    {check.lastPing ? formatDistanceToNow(new Date(check.lastPing), { addSuffix: true }) : 'Never'}
+                    <Text size="2" color="gray">
+                      {check.lastPing ? formatDistanceToNow(new Date(check.lastPing), { addSuffix: true }) : 'Never'}
+                    </Text>
                   </Table.Cell>
-                  <Table.Cell>{(check.intervalSeconds / 60).toFixed(0)} min</Table.Cell>
+                  <Table.Cell>
+                    <Text size="2" color="gray">
+                      {(check.intervalSeconds / 60).toFixed(0)} min
+                    </Text>
+                  </Table.Cell>
                   <Table.Cell>
                     <Flex gap="2">
-                      <Button variant="outline" size="1" onClick={() => navigate(`/checks/${check.id}`)}>
+                      <Button variant="soft" color="gray" size="2" onClick={() => navigate(`/checks/${check.id}`)} style={{ cursor: 'pointer' }}>
                         Details / Edit
                       </Button>
                     </Flex>

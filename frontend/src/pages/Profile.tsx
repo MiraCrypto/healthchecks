@@ -33,8 +33,8 @@ export default function Profile() {
     return (
       <Container size="2" py="6">
         <Flex direction="column" gap="4" align="center">
-          <Text color="red">{error}</Text>
-          <Button variant="soft" onClick={() => navigate('/')}>Back to Dashboard</Button>
+          <Text color="ruby">{error}</Text>
+          <Button variant="soft" color="gray" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>Back to Dashboard</Button>
         </Flex>
       </Container>
     );
@@ -43,7 +43,7 @@ export default function Profile() {
   if (!profile) {
     return (
       <Container size="2" py="6">
-        <Text>Loading profile...</Text>
+        <Text color="gray">Loading profile...</Text>
       </Container>
     );
   }
@@ -51,20 +51,21 @@ export default function Profile() {
   return (
     <Container size="2" py="6">
       <Flex mb="6" align="center" gap="3">
-        <Button variant="ghost" onClick={() => navigate('/')}><ArrowLeft size={16} /> Dashboard</Button>
+        <Button variant="ghost" color="gray" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}><ArrowLeft size={16} /> Back</Button>
       </Flex>
-      <Card size="4">
+      <Card size="4" variant="surface">
         <Flex direction="column" align="center" gap="4">
           <Avatar
-            size="8"
+            size="9"
             fallback={profile.displayName ? profile.displayName[0].toUpperCase() : profile.username[0].toUpperCase()}
             radius="full"
+            color="iris"
           />
-          <Heading size="6">{profile.displayName || profile.username}</Heading>
-          <Text color="gray" size="3">@{profile.username}</Text>
+          <Heading size="7" style={{ color: 'var(--slate-12)' }}>{profile.displayName || profile.username}</Heading>
+          <Text color="gray" size="4">@{profile.username}</Text>
 
           {profile.description ? (
-            <Text mt="4" align="center" style={{ whiteSpace: 'pre-wrap' }}>
+            <Text mt="4" align="center" style={{ whiteSpace: 'pre-wrap', color: 'var(--slate-11)' }}>
               {profile.description}
             </Text>
           ) : (

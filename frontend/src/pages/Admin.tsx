@@ -46,11 +46,11 @@ export default function Admin() {
     return (
       <Container size="4" py="6">
         <Flex direction="column" align="center" gap="4">
-          <Callout.Root color="red">
+          <Callout.Root color="ruby" variant="surface">
             <Callout.Icon><AlertCircle size={16} /></Callout.Icon>
             <Callout.Text>{error}</Callout.Text>
           </Callout.Root>
-          <Button onClick={() => navigate('/')}>Back to Dashboard</Button>
+          <Button variant="soft" color="gray" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>Back to Dashboard</Button>
         </Flex>
       </Container>
     );
@@ -59,20 +59,20 @@ export default function Admin() {
   return (
     <Container size="4" py="6">
       <Flex mb="6" align="center" gap="3">
-        <Button variant="ghost" onClick={() => navigate('/')}><ArrowLeft size={16} /> Dashboard</Button>
+        <Button variant="ghost" color="gray" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}><ArrowLeft size={16} /> Back</Button>
       </Flex>
 
-      <Flex justify="between" align="center" mb="6">
-        <Heading size="8">User Management</Heading>
+      <Flex justify="between" align="center" mb="8">
+        <Heading size="8" style={{ color: 'var(--slate-12)' }}>User Management</Heading>
         <Flex gap="3" align="center">
-          <Button variant="soft" onClick={loadUsers} disabled={loading}>
+          <Button variant="soft" color="iris" onClick={loadUsers} disabled={loading} style={{ cursor: 'pointer' }}>
             <RefreshCw size={16} /> Refresh
           </Button>
           <CreateUserDialog onCreated={loadUsers} />
         </Flex>
       </Flex>
 
-      <Table.Root variant="surface">
+      <Table.Root variant="surface" size="3">
         <Table.Header>
           <Table.Row>
             <Table.ColumnHeaderCell>Username</Table.ColumnHeaderCell>
@@ -86,18 +86,18 @@ export default function Admin() {
           {users.map(u => (
             <Table.Row key={u.id} align="center">
               <Table.RowHeaderCell>
-                <a href={`/u/${u.username}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <strong>{u.username}</strong>
+                <a href={`/u/${u.username}`} style={{ textDecoration: 'none', color: 'var(--accent-9)', fontWeight: 500 }}>
+                  {u.username}
                 </a>
               </Table.RowHeaderCell>
-              <Table.Cell>{u.displayName || '-'}</Table.Cell>
+              <Table.Cell><Text color="gray">{u.displayName || '-'}</Text></Table.Cell>
               <Table.Cell>
-                <Badge color={u.role === 'ADMIN' ? 'ruby' : 'blue'}>{u.role}</Badge>
+                <Badge color={u.role === 'ADMIN' ? 'ruby' : 'iris'} radius="full" size="2">{u.role}</Badge>
               </Table.Cell>
-              <Table.Cell>{format(new Date(u.createdAt), 'MMM d, yyyy')}</Table.Cell>
+              <Table.Cell><Text color="gray">{format(new Date(u.createdAt), 'MMM d, yyyy')}</Text></Table.Cell>
               <Table.Cell>
-                <Select.Root value={u.role} onValueChange={(val: 'USER'|'ADMIN') => handleRoleChange(u.id, val)}>
-                  <Select.Trigger />
+                <Select.Root size="2" value={u.role} onValueChange={(val: 'USER'|'ADMIN') => handleRoleChange(u.id, val)}>
+                  <Select.Trigger variant="soft" />
                   <Select.Content>
                     <Select.Item value="USER">User</Select.Item>
                     <Select.Item value="ADMIN">Admin</Select.Item>
@@ -135,26 +135,26 @@ function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
   return (
     <Dialog.Root>
       <Dialog.Trigger>
-        <Button><Plus size={16} /> Add User</Button>
+        <Button variant="solid" style={{ cursor: 'pointer' }}><Plus size={16} /> Add User</Button>
       </Dialog.Trigger>
       <Dialog.Content style={{ maxWidth: 450 }}>
         <Dialog.Title>Create New User</Dialog.Title>
-        <Dialog.Description size="2" mb="4">
+        <Dialog.Description size="2" mb="5">
           Add a new user directly to the platform.
         </Dialog.Description>
 
-        <Flex direction="column" gap="3">
+        <Flex direction="column" gap="4">
           <label>
-            <Text as="div" size="2" mb="1" weight="bold">Username</Text>
-            <TextField.Root value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username" />
+            <Text as="div" size="2" mb="2" weight="medium">Username</Text>
+            <TextField.Root size="3" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username" />
           </label>
           <label>
-            <Text as="div" size="2" mb="1" weight="bold">Password</Text>
-            <TextField.Root type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+            <Text as="div" size="2" mb="2" weight="medium">Password</Text>
+            <TextField.Root size="3" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
           </label>
           <label>
-            <Text as="div" size="2" mb="1" weight="bold">Role</Text>
-            <Select.Root value={role} onValueChange={(val: 'USER'|'ADMIN') => setRole(val)}>
+            <Text as="div" size="2" mb="2" weight="medium">Role</Text>
+            <Select.Root size="3" value={role} onValueChange={(val: 'USER'|'ADMIN') => setRole(val)}>
               <Select.Trigger style={{ width: '100%' }} />
               <Select.Content>
                 <Select.Item value="USER">User</Select.Item>
@@ -164,12 +164,12 @@ function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
           </label>
         </Flex>
 
-        <Flex gap="3" mt="4" justify="end" align="center">
-          {error && <Text color="red" size="2" mr="auto">{error}</Text>}
+        <Flex gap="3" mt="5" justify="end" align="center">
+          {error && <Text color="ruby" size="2" mr="auto">{error}</Text>}
           <Dialog.Close>
-            <Button variant="soft" color="gray">Cancel</Button>
+            <Button variant="soft" color="gray" style={{ cursor: 'pointer' }}>Cancel</Button>
           </Dialog.Close>
-          <Button onClick={handleSubmit}>Create</Button>
+          <Button onClick={handleSubmit} variant="solid" style={{ cursor: 'pointer' }}>Create</Button>
         </Flex>
       </Dialog.Content>
     </Dialog.Root>
