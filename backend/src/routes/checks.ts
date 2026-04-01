@@ -73,9 +73,9 @@ export default async function checkRoutes(fastify: FastifyInstance) {
 
     const updateData: Record<string, unknown> = { ...parseRes.data };
 
-    // Prevent manual updates to non-pausable statuses
-    if (updateData.status && updateData.status !== 'PAUSED' && updateData.status !== 'UP') {
-       return reply.status(400).send({ error: 'Invalid status update. Can only transition to PAUSED or UP.' });
+    // Prevent manual updates to invalid statuses
+    if (updateData.status && !['PAUSED', 'UP', 'DOWN', 'NEW'].includes(updateData.status as string)) {
+       return reply.status(400).send({ error: 'Invalid status update.' });
     }
 
     // Convert undefined to null for description, runbook, group, tags to ensure they get cleared if empty

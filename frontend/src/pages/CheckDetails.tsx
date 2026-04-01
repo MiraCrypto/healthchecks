@@ -197,10 +197,24 @@ export default function CheckDetails() {
   };
 
   const handleResume = async () => {
+    if (!check) return;
     setActionLoading(true);
     try {
-      await ApiClient.updateCheck(check.id, { status: 'UP' });
-      loadData();
+      let newStatus: 'NEW' | 'UP' | 'DOWN' = 'NEW';
+      if (check.lastPing) {
+        const lastPingDate = new Date(check.lastPing);
+        const now = new Date();
+        const elapsedSeconds = (now.getTime() - lastPingDate.getTime()) / 1000;
+
+        if (elapsedSeconds > (check.intervalSeconds + check.graceSeconds)) {
+          newStatus = 'DOWN';
+        } else {
+          newStatus = 'UP';
+        }
+      }
+
+      await ApiClient.updateCheck(check.id, { status: newStatus });
+      await loadData();
     } catch (err) {
       setError((err as Error).message || 'Error resuming check');
     } finally {

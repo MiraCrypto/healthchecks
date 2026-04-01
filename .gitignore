@@ -4,3 +4,7 @@ dist/
 data.db
 .env
 .env.*
+cookies.txt
+frontend-after-click.png
+frontend-before-click.png
+test-results/
