@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "npx concurrently \"npm run dev -w backend\" \"npm run dev -w frontend\"",
-    "build": "npm run build --workspaces --if-present"
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm test --workspaces --if-present"
   },
   "workspaces": [
     "shared",

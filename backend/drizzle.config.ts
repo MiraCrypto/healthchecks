@@ -1,12 +1,20 @@
 import { defineConfig } from 'drizzle-kit';
 
-const isPostgres = process.env.DB_DIALECT === 'postgresql' || process.env.DB_DIALECT === 'postgres';
+const dialect = process.env.DB_DIALECT?.toLowerCase();
+
+if (dialect !== 'postgres' && dialect !== 'postgresql') {
+  throw new Error(`Unsupported or missing DB_DIALECT: ${process.env.DB_DIALECT}. Must be 'postgres' or 'postgresql'.`);
+}
+
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL environment variable is required.");
+}
 
 export default defineConfig({
-  schema: isPostgres ? './src/db/schema.pg.ts' : './src/db/schema.sqlite.ts',
-  out: isPostgres ? './drizzle/pg' : './drizzle/sqlite',
-  dialect: isPostgres ? 'postgresql' : 'sqlite',
+  schema: './src/db/schema.pg.ts',
+  out: './drizzle/pg',
+  dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.DATABASE_URL || (isPostgres ? 'postgresql://localhost:5432/healthchecks' : 'file:./data.db'),
+    url: process.env.DATABASE_URL,
   },
 });

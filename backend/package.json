@@ -8,14 +8,14 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "db:generate": "drizzle-kit generate",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "test": "tsx --test tests/**/*.test.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^11.2.0",
     "@healthchecks/shared": "1.0.0",
     "bcrypt": "^6.0.0",
-    "better-sqlite3": "^12.8.0",
     "dotenv": "^17.3.1",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.8.4",
@@ -26,7 +26,6 @@
   "devDependencies": {
     "@tsconfig/node-lts": "^24.0.0",
     "@types/bcrypt": "^6.0.0",
-    "@types/better-sqlite3": "^7.6.13",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.5.0",
     "@types/pg": "^8.20.0",
