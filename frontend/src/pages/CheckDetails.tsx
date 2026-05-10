@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Heading, Card, Text, Badge, Button, Flex, Table, Box, Dialog, ScrollArea, Grid, TextArea, TextField, Callout } from '@radix-ui/themes';
 import { Check, Ping } from '@healthchecks/shared';
 import { format, formatDistanceToNow } from 'date-fns';
-import { ArrowLeft, Trash2, FileText, Copy, ExternalLink, Edit2, Save, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Trash2, FileText, Copy, ExternalLink, Save, CheckCircle, AlertCircle } from 'lucide-react';
 import { ApiClient } from '../api/ApiClient.js';
 
 function PayloadViewer({ pingId }: { pingId: string }) {
@@ -68,8 +68,14 @@ export default function CheckDetails() {
   const [pings, setPings] = useState<Ping[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedPingForPayload, setSelectedPingForPayload] = useState<Ping | null>(null);
-  const [error, setError] = useState<string>('');
+  const [, setError] = useState<string>('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 5000); // Auto dismiss after 5 seconds
+  };
 
   // Editable settings state
   const [name, setName] = useState('');
@@ -128,9 +134,12 @@ export default function CheckDetails() {
     setError('');
     try {
       await ApiClient.deleteCheck(id);
-      navigate('/');
+      showToast('Check deleted successfully', 'success');
+      setTimeout(() => navigate('/'), 1000); // Delay navigation to let user see toast
     } catch (err) {
-      setError((err as Error).message || 'Failed to delete check');
+      const msg = (err as Error).message || 'Failed to delete check';
+      setError(msg);
+      showToast(msg, 'error');
     }
   };
 
@@ -200,9 +209,12 @@ export default function CheckDetails() {
     setActionLoading(true);
     try {
       await ApiClient.updateCheck(check.id, { status: 'UP' });
+      showToast('Check resumed successfully', 'success');
       loadData();
     } catch (err) {
-      setError((err as Error).message || 'Error resuming check');
+      const msg = (err as Error).message || 'Error resuming check';
+      setError(msg);
+      showToast(msg, 'error');
     } finally {
       setActionLoading(false);
     }
@@ -212,9 +224,12 @@ export default function CheckDetails() {
     setActionLoading(true);
     try {
       await ApiClient.updateCheck(check.id, { status: 'PAUSED' });
+      showToast('Check paused successfully', 'success');
       loadData();
     } catch (err) {
-      setError((err as Error).message || 'Error pausing check');
+      const msg = (err as Error).message || 'Error pausing check';
+      setError(msg);
+      showToast(msg, 'error');
     } finally {
       setActionLoading(false);
     }
@@ -436,6 +451,29 @@ export default function CheckDetails() {
           </Flex>
         </Dialog.Content>
       </Dialog.Root>
+
+      {toast && (
+        <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 1000, maxWidth: '400px' }}>
+          <Callout.Root color={toast.type === 'error' ? 'ruby' : 'grass'} size="2" style={{ display: 'flex', alignItems: 'center' }}>
+            <Callout.Icon>
+              {toast.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle size={18} />}
+            </Callout.Icon>
+            <Callout.Text style={{ flexGrow: 1, marginRight: '16px' }}>
+              {toast.message}
+            </Callout.Text>
+            <Button 
+              variant="ghost" 
+              color={toast.type === 'error' ? 'ruby' : 'grass'} 
+              size="1" 
+              onClick={() => setToast(null)} 
+              style={{ cursor: 'pointer', padding: 0, height: 'auto' }}
+              aria-label="Close"
+            >
+              ✕
+            </Button>
+          </Callout.Root>
+        </div>
+      )}
     </Container>
   );
 }

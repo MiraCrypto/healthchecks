@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Heading, Table, Badge, Button, Flex, Text, Dialog, TextField } from '@radix-ui/themes';
+import { Container, Heading, Table, Badge, Button, Flex, Text, TextField } from '@radix-ui/themes';
 import { Check } from '@healthchecks/shared';
 import { formatDistanceToNow } from 'date-fns';
-import { Plus, RefreshCw, LogOut, Settings as SettingsIcon, Shield, Edit2 } from 'lucide-react';
-import { TextArea } from '@radix-ui/themes';
+import { RefreshCw, LogOut, Settings as SettingsIcon, Shield } from 'lucide-react';
 import { User } from '@healthchecks/shared';
 import { ApiClient } from '../api/ApiClient.js';
 

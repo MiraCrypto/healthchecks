@@ -1,12 +1,9 @@
 import { z } from 'zod';
 
-export const RoleSchema = z.enum(["USER", "ADMIN"]);
-export type Role = z.infer<typeof RoleSchema>;
-
 export const UserSchema = z.object({
   id: z.string().uuid(),
   username: z.string().min(3).max(50),
-  role: RoleSchema.default("USER"),
+  role: z.enum(["USER", "ADMIN"]).default("USER"),
   displayName: z.string().max(100).nullable().optional(),
   description: z.string().max(1000).nullable().optional(),
   createdAt: z.string().datetime()
@@ -31,17 +28,14 @@ export const AdminCreateUserSchema = z.object({
   username: z.string().min(3).max(50),
   // .max(72) prevents bcrypt from silently truncating long strings or exhausting CPU cycles
   password: z.string().min(6).max(72),
-  role: RoleSchema.default("USER"),
+  role: z.enum(["USER", "ADMIN"]).default("USER"),
 });
 export type AdminCreateUserDTO = z.infer<typeof AdminCreateUserSchema>;
 
 export const AdminUpdateRoleSchema = z.object({
-  role: RoleSchema,
+  role: z.enum(["USER", "ADMIN"]),
 });
 export type AdminUpdateRoleDTO = z.infer<typeof AdminUpdateRoleSchema>;
-
-export const CheckStatusSchema = z.enum(["NEW", "UP", "DOWN", "PAUSED"]);
-export type CheckStatus = z.infer<typeof CheckStatusSchema>;
 
 export const CheckSchema = z.object({
   id: z.string().uuid(),
@@ -53,7 +47,7 @@ export const CheckSchema = z.object({
   tags: z.string().optional(), // Comma separated tags
   intervalSeconds: z.number().int().min(60), // Minimum 1 minute
   graceSeconds: z.number().int().min(60), // Minimum 1 minute
-  status: CheckStatusSchema,
+  status: z.enum(["NEW", "UP", "DOWN", "PAUSED"]),
   lastPing: z.string().datetime().nullable(),
   createdAt: z.string().datetime()
 });

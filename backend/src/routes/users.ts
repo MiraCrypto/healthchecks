@@ -3,7 +3,6 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { userRepo } from '../db/DatabaseFactory.js';
 import { UpdateProfileSchema, ChangePasswordSchema, AdminCreateUserSchema, AdminUpdateRoleSchema } from '@healthchecks/shared';
-import { eq, and, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 const uuidSchema = z.string().uuid();

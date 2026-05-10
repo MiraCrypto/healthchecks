@@ -7,7 +7,7 @@ const uuidSchema = z.string().uuid();
 
 export default async function pingRoutes(fastify: FastifyInstance) {
   fastify.removeAllContentTypeParsers();
-  fastify.addContentTypeParser('*', { parseAs: 'buffer' }, (req, body, done) => {
+  fastify.addContentTypeParser('*', { parseAs: 'buffer' }, (_req, body, done) => {
     done(null, body);
   });
 

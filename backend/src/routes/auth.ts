@@ -90,7 +90,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
     return reply.send({ message: 'Logged in' });
   });
 
-  fastify.post('/logout', async (request, reply) => {
+  fastify.post('/logout', async (_request, reply) => {
     reply.clearCookie('auth_token', { path: '/' });
     return reply.send({ message: 'Logged out' });
   });
