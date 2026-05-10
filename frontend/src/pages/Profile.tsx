@@ -57,7 +57,7 @@ export default function Profile() {
         <Flex direction="column" align="center" gap="4">
           <Avatar
             size="9"
-            fallback={profile.displayName ? profile.displayName[0].toUpperCase() : profile.username[0].toUpperCase()}
+            fallback={profile.displayName && profile.displayName[0] ? profile.displayName[0].toUpperCase() : (profile.username[0] ? profile.username[0].toUpperCase() : '?')}
             radius="full"
             color="iris"
           />

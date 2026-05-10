@@ -17,8 +17,8 @@ export class DatabaseFactory {
   public readonly pingRepo: IPingRepository;
 
   constructor() {
-    const dialect = process.env.DB_DIALECT || 'sqlite';
-    const databaseUrl = process.env.DATABASE_URL || 'data.db';
+    const dialect = process.env['DB_DIALECT'] || 'sqlite';
+    const databaseUrl = process.env['DATABASE_URL'] || 'data.db';
 
     if (dialect === 'sqlite') {
       const sqlite = new Database(databaseUrl);

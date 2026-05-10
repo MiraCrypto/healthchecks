@@ -39,14 +39,14 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
     const token = jwt.sign(
       { username, id: newUser.id, role },
-      process.env.JWT_SECRET || 'supersecret123',
+      process.env['JWT_SECRET'] || 'supersecret123',
       { expiresIn: '7d' }
     );
 
     reply.setCookie('auth_token', token, {
       path: '/',
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env['NODE_ENV'] === 'production',
       sameSite: 'strict',
       maxAge: 60 * 60 * 24 * 7 // 1 week
     });
@@ -75,14 +75,14 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
     const token = jwt.sign(
       { username, id: user.id, role: user.role },
-      process.env.JWT_SECRET || 'supersecret123',
+      process.env['JWT_SECRET'] || 'supersecret123',
       { expiresIn: '7d' }
     );
 
     reply.setCookie('auth_token', token, {
       path: '/',
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env['NODE_ENV'] === 'production',
       sameSite: 'strict',
       maxAge: 60 * 60 * 24 * 7 // 1 week
     });

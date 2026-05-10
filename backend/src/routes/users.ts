@@ -30,7 +30,10 @@ export default async function userRoutes(fastify: FastifyInstance) {
 
   // Update Profile
   fastify.put('/me', async (request, reply) => {
-    const userToken = request.user!;
+    const userToken = request.user;
+    if (!userToken) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
     const parseRes = UpdateProfileSchema.safeParse(request.body);
     if (!parseRes.success) {
       return reply.status(400).send({ error: 'Invalid payload' });
@@ -42,7 +45,10 @@ export default async function userRoutes(fastify: FastifyInstance) {
 
   // Change Password
   fastify.put('/me/password', async (request, reply) => {
-    const userToken = request.user!;
+    const userToken = request.user;
+    if (!userToken) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
     const parseRes = ChangePasswordSchema.safeParse(request.body);
     if (!parseRes.success) {
       return reply.status(400).send({ error: 'Invalid payload' });
@@ -66,7 +72,10 @@ export default async function userRoutes(fastify: FastifyInstance) {
 
   // Admin Routes
   fastify.get('/', async (request, reply) => {
-    const userToken = request.user!;
+    const userToken = request.user;
+    if (!userToken) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
     if (userToken.role !== 'ADMIN') {
       return reply.status(403).send({ error: 'Forbidden' });
     }
@@ -82,7 +91,10 @@ export default async function userRoutes(fastify: FastifyInstance) {
   });
 
   fastify.post('/', async (request, reply) => {
-    const userToken = request.user!;
+    const userToken = request.user;
+    if (!userToken) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
     if (userToken.role !== 'ADMIN') {
       return reply.status(403).send({ error: 'Forbidden' });
     }
@@ -115,7 +127,10 @@ export default async function userRoutes(fastify: FastifyInstance) {
   });
 
   fastify.put('/:id/role', async (request, reply) => {
-    const userToken = request.user!;
+    const userToken = request.user;
+    if (!userToken) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
     if (userToken.role !== 'ADMIN') {
       return reply.status(403).send({ error: 'Forbidden' });
     }

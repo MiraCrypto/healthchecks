@@ -16,12 +16,14 @@ export class SqliteUserRepository implements IUserRepository {
 
   async findByUsername(username: string): Promise<(User & { passwordHash: string }) | null> {
     const res = await this.db.select().from(sqliteSchema.users).where(eq(sqliteSchema.users.username, username)).limit(1);
-    return res.length > 0 ? this.mapToUser(res[0]!) : null;
+    const row = res[0];
+    return row ? this.mapToUser(row) : null;
   }
 
   async findById(id: string): Promise<(User & { passwordHash: string }) | null> {
     const res = await this.db.select().from(sqliteSchema.users).where(eq(sqliteSchema.users.id, id)).limit(1);
-    return res.length > 0 ? this.mapToUser(res[0]!) : null;
+    const row = res[0];
+    return row ? this.mapToUser(row) : null;
   }
 
   async insert(data: User & { passwordHash: string }): Promise<void> {
@@ -60,12 +62,14 @@ export class SqliteCheckRepository implements ICheckRepository {
 
   async findById(id: string, userId: string): Promise<Check | null> {
     const res = await this.db.select().from(sqliteSchema.checks).where(and(eq(sqliteSchema.checks.id, id), eq(sqliteSchema.checks.userId, userId))).limit(1);
-    return res.length > 0 ? this.mapToCheck(res[0]!) : null;
+    const row = res[0];
+    return row ? this.mapToCheck(row) : null;
   }
 
   async findByIdUnscoped(id: string): Promise<Check | null> {
     const res = await this.db.select().from(sqliteSchema.checks).where(eq(sqliteSchema.checks.id, id)).limit(1);
-    return res.length > 0 ? this.mapToCheck(res[0]!) : null;
+    const row = res[0];
+    return row ? this.mapToCheck(row) : null;
   }
 
   async insert(data: Check): Promise<void> {
@@ -144,6 +148,7 @@ export class SqlitePingRepository implements IPingRepository {
   async findPayloadById(id: string): Promise<{ payload: Buffer | null; mimeType: string | null } | null> {
     const res = await this.db.select({ payload: sqliteSchema.pings.payload, mimeType: sqliteSchema.pings.mimeType })
       .from(sqliteSchema.pings).where(eq(sqliteSchema.pings.id, id)).limit(1);
-    return res.length > 0 ? { payload: res[0]!.payload, mimeType: res[0]!.mimeType } : null;
+    const row = res[0];
+    return row ? { payload: row.payload, mimeType: row.mimeType } : null;
   }
 }

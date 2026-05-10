@@ -8,13 +8,15 @@ const uuidSchema = z.string().uuid();
 
 export default async function checkRoutes(fastify: FastifyInstance) {
   fastify.get('/', async (request, reply) => {
-    const userId = request.user!.id;
+    if (!request.user) return reply.status(401).send({ error: 'Unauthorized' });
+    const userId = request.user.id;
     const checks = await checkRepo.findAll(userId);
     return reply.send(checks);
   });
 
   fastify.get('/:id', async (request, reply) => {
-    const userId = request.user!.id;
+    if (!request.user) return reply.status(401).send({ error: 'Unauthorized' });
+    const userId = request.user.id;
     const { id } = request.params as { id: string };
     if (!uuidSchema.safeParse(id).success) {
       return reply.status(400).send({ error: 'Invalid UUID format for id' });
@@ -25,7 +27,8 @@ export default async function checkRoutes(fastify: FastifyInstance) {
   });
 
   fastify.get('/:id/pings', async (request, reply) => {
-    const userId = request.user!.id;
+    if (!request.user) return reply.status(401).send({ error: 'Unauthorized' });
+    const userId = request.user.id;
     const { id } = request.params as { id: string };
     if (!uuidSchema.safeParse(id).success) {
       return reply.status(400).send({ error: 'Invalid UUID format for id' });
@@ -38,7 +41,8 @@ export default async function checkRoutes(fastify: FastifyInstance) {
   });
 
   fastify.post('/', async (request, reply) => {
-    const userId = request.user!.id;
+    if (!request.user) return reply.status(401).send({ error: 'Unauthorized' });
+    const userId = request.user.id;
     const parseRes = CreateCheckSchema.safeParse(request.body);
     if (!parseRes.success) return reply.status(400).send({ error: parseRes.error.issues });
 
@@ -63,7 +67,8 @@ export default async function checkRoutes(fastify: FastifyInstance) {
   });
 
   fastify.put('/:id', async (request, reply) => {
-    const userId = request.user!.id;
+    if (!request.user) return reply.status(401).send({ error: 'Unauthorized' });
+    const userId = request.user.id;
     const { id } = request.params as { id: string };
     if (!uuidSchema.safeParse(id).success) {
       return reply.status(400).send({ error: 'Invalid UUID format for id' });
@@ -74,22 +79,22 @@ export default async function checkRoutes(fastify: FastifyInstance) {
     const updateData: Record<string, unknown> = { ...parseRes.data };
 
     // Prevent manual updates to non-pausable statuses
-    if (updateData.status && updateData.status !== 'PAUSED' && updateData.status !== 'UP') {
+    if (updateData['status'] && updateData['status'] !== 'PAUSED' && updateData['status'] !== 'UP') {
        return reply.status(400).send({ error: 'Invalid status update. Can only transition to PAUSED or UP.' });
     }
 
     // Convert undefined to null for description, runbook, group, tags to ensure they get cleared if empty
-    if ('description' in updateData && updateData.description === undefined) {
-      updateData.description = null;
+    if ('description' in updateData && updateData['description'] === undefined) {
+      updateData['description'] = null;
     }
-    if ('runbook' in updateData && updateData.runbook === undefined) {
-      updateData.runbook = null;
+    if ('runbook' in updateData && updateData['runbook'] === undefined) {
+      updateData['runbook'] = null;
     }
-    if ('group' in updateData && updateData.group === undefined) {
-      updateData.group = null;
+    if ('group' in updateData && updateData['group'] === undefined) {
+      updateData['group'] = null;
     }
-    if ('tags' in updateData && updateData.tags === undefined) {
-      updateData.tags = null;
+    if ('tags' in updateData && updateData['tags'] === undefined) {
+      updateData['tags'] = null;
     }
 
     await checkRepo.update(id, userId, updateData);
@@ -98,7 +103,8 @@ export default async function checkRoutes(fastify: FastifyInstance) {
   });
 
   fastify.delete('/:id', async (request, reply) => {
-    const userId = request.user!.id;
+    if (!request.user) return reply.status(401).send({ error: 'Unauthorized' });
+    const userId = request.user.id;
     const { id } = request.params as { id: string };
     if (!uuidSchema.safeParse(id).success) {
       return reply.status(400).send({ error: 'Invalid UUID format for id' });

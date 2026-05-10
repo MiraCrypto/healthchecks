@@ -15,12 +15,12 @@ const fastify: FastifyInstance = Fastify({ logger: true });
 
 async function buildServer() {
   await fastify.register(cors, {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: process.env['FRONTEND_URL'] || 'http://localhost:5173',
     credentials: true,
   });
 
   await fastify.register(cookie, {
-    secret: process.env.COOKIE_SECRET || 'fallback_cookie_secret_1234',
+    secret: process.env['COOKIE_SECRET'] || 'fallback_cookie_secret_1234',
   });
 
   // Authentication Hook (Minimal JWT verify)
@@ -33,11 +33,11 @@ async function buildServer() {
     if ((request.url === '/api/auth/login' || request.url === '/api/auth/register') && request.method === 'POST') return;
 
     try {
-      const token = request.cookies.auth_token;
+      const token = request.cookies['auth_token'];
       if (!token) {
         return reply.status(401).send({ error: 'Unauthorized' });
       }
-      const secret = process.env.JWT_SECRET || 'supersecret123';
+      const secret = process.env['JWT_SECRET'] || 'supersecret123';
       const decoded = jwt.verify(token, secret) as { id: string; username: string; role: 'USER' | 'ADMIN' };
       request.user = decoded;
     } catch (err) {
@@ -55,7 +55,7 @@ async function buildServer() {
 }
 
 buildServer().then((app) => {
-  const PORT = parseInt(process.env.PORT || '3000', 10);
+  const PORT = parseInt(process.env['PORT'] || '3000', 10);
   app.listen({ port: PORT, host: '0.0.0.0' }, (err, address) => {
     if (err) {
       app.log.error(err);
