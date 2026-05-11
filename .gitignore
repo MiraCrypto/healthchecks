@@ -2,5 +2,7 @@ node_modules/
 *.log
 dist/
 data.db
+*.db
+*.sqlite
 .env
 .env.*

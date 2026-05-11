@@ -52,7 +52,7 @@ jobs:
         working-directory: ./backend
         env:
           DB_DIALECT: sqlite
-          DATABASE_URL: file:./test.db
+          DATABASE_URL: file:./ci_test.db
         run: npx tsx -e "import { factory } from './src/db/DatabaseFactory.ts'; factory.runMigrations().then(() => { console.log('SQLite migrations successful'); process.exit(0); }).catch(e => { console.error(e); process.exit(1); })"
         
       - name: Validate PostgreSQL migrations apply correctly
