@@ -8,12 +8,22 @@ import checkRoutes from './routes/checks.js';
 import payloadRoutes from './routes/payload.js';
 import pingRoutes from './routes/ping.js';
 import userRoutes from './routes/users.js';
+import { factory } from './db/DatabaseFactory.js';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
 const fastify: FastifyInstance = Fastify({ logger: true });
 
 async function buildServer() {
+  try {
+    fastify.log.info('Running database migrations...');
+    await factory.runMigrations();
+    fastify.log.info('Database migrations completed successfully.');
+  } catch (err) {
+    fastify.log.error({ err }, 'Failed to run database migrations');
+    throw err;
+  }
+
   await fastify.register(cors, {
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
     credentials: true,

@@ -8,7 +8,12 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "db:generate": "drizzle-kit generate",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "db:generate:pg": "DB_DIALECT=postgres drizzle-kit generate",
+    "db:generate:sqlite": "DB_DIALECT=sqlite drizzle-kit generate",
+    "db:generate:all": "npm run db:generate:pg && npm run db:generate:sqlite",
+    "db:check:pg": "DB_DIALECT=postgres drizzle-kit check",
+    "db:check:sqlite": "DB_DIALECT=sqlite drizzle-kit check"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",

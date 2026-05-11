@@ -1,0 +1,69 @@
+name: Database CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: healthchecks
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: healthchecks_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm install
+
+      - name: Check for uncommitted SQLite schema changes
+        working-directory: ./backend
+        run: |
+          npm run db:generate:sqlite
+          git diff --exit-code drizzle/sqlite || (echo "Pending SQLite migrations found. Please run 'npm run db:generate:all' and commit the changes." && exit 1)
+
+      - name: Check for uncommitted PostgreSQL schema changes
+        working-directory: ./backend
+        run: |
+          npm run db:generate:pg
+          git diff --exit-code drizzle/pg || (echo "Pending PostgreSQL migrations found. Please run 'npm run db:generate:all' and commit the changes." && exit 1)
+
+      - name: Validate SQLite migrations apply correctly
+        working-directory: ./backend
+        env:
+          DB_DIALECT: sqlite
+          DATABASE_URL: file:./test.db
+        run: npx tsx -e "import { factory } from './src/db/DatabaseFactory.ts'; factory.runMigrations().then(() => { console.log('SQLite migrations successful'); process.exit(0); }).catch(e => { console.error(e); process.exit(1); })"
+        
+      - name: Validate PostgreSQL migrations apply correctly
+        working-directory: ./backend
+        env:
+          DB_DIALECT: postgres
+          DATABASE_URL: postgresql://healthchecks:password@localhost:5432/healthchecks_test
+        run: npx tsx -e "import { factory } from './src/db/DatabaseFactory.ts'; factory.runMigrations().then(() => { console.log('PG migrations successful'); process.exit(0); }).catch(e => { console.error(e); process.exit(1); })"
+
+      - name: Run Migration Integrity Check
+        working-directory: ./backend
+        run: |
+          npm run db:check:sqlite
+          npm run db:check:pg
