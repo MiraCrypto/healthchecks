@@ -1,14 +1,18 @@
 {
-  "extends": "@tsconfig/node-lts/tsconfig.json",
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
+    "target": "ES2024",
+    "lib": [
+      "ES2024",
+      "ESNext.Array",
+      "ESNext.Collection",
+      "ESNext.Iterator",
+      "ESNext.Promise"
+    ],
     "outDir": "./dist",
     "rootDir": "./src",
     "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "moduleResolution": "NodeNext"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
