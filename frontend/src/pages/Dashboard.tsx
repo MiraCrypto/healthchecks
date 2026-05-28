@@ -1,4 +1,4 @@
-import type { Check, User } from '@healthchecks/shared'
+import type { ResolvedCheck, User } from '@healthchecks/shared'
 import { Badge, Button, Container, Flex, Heading, Table, Text, TextField } from '@radix-ui/themes'
 import { formatDistanceToNow } from 'date-fns'
 import { LogOut, RefreshCw, Settings as SettingsIcon, Shield } from 'lucide-react'
@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { ApiClient } from '../api/ApiClient.js'
 
 export default function Dashboard() {
-  const [checks, setChecks] = useState<Check[]>([])
+  const [checks, setChecks] = useState<ResolvedCheck[]>([])
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [quickAddVal, setQuickAddVal] = useState('')
@@ -66,6 +66,7 @@ export default function Dashboard() {
       case 'UP': return 'green'
       case 'DOWN': return 'red'
       case 'PAUSED': return 'amber'
+      case 'LATE': return 'orange'
       default: return 'gray'
     }
   }
@@ -158,7 +159,7 @@ export default function Dashboard() {
             acc[g] = []
           acc[g].push(check)
           return acc
-        }, {} as Record<string, Check[]>),
+        }, {} as Record<string, ResolvedCheck[]>),
       ).sort(([g1], [g2]) => {
         if (g1 === 'Default')
           return 1

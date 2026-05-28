@@ -1,4 +1,4 @@
-import type { Check, Ping } from '@healthchecks/shared'
+import type { ResolvedCheck, Ping } from '@healthchecks/shared'
 import { Badge, Box, Button, Callout, Card, Container, Dialog, Flex, Grid, Heading, ScrollArea, Table, Text, TextArea, TextField } from '@radix-ui/themes'
 import { format, formatDistanceToNow } from 'date-fns'
 import { AlertCircle, ArrowLeft, CheckCircle, Copy, ExternalLink, FileText, Save, Trash2 } from 'lucide-react'
@@ -77,7 +77,7 @@ function PayloadViewer({ pingId }: { pingId: string }) {
 export default function CheckDetails() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [check, setCheck] = useState<Check | null>(null)
+  const [check, setCheck] = useState<ResolvedCheck | null>(null)
   const [pings, setPings] = useState<Ping[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [selectedPingForPayload, setSelectedPingForPayload] = useState<Ping | null>(null)
@@ -213,6 +213,7 @@ export default function CheckDetails() {
       case 'UP': return 'green'
       case 'DOWN': return 'ruby'
       case 'PAUSED': return 'amber'
+      case 'LATE': return 'orange'
       default: return 'gray'
     }
   }
