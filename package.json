@@ -6,7 +6,9 @@
     "dev": "npx concurrently \"npm run dev -w backend\" \"npm run dev -w frontend\"",
     "build": "npm run build --workspaces --if-present",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "workspaces": [
     "shared",
@@ -15,10 +17,16 @@
   ],
   "devDependencies": {
     "@antfu/eslint-config": "^9.0.0",
+    "@playwright/test": "^1.60.0",
     "@tsconfig/node24": "^24.0.4",
     "@tsconfig/strictest": "^2.0.8",
     "@tsconfig/vite-react": "^8.0.6",
+    "@types/supertest": "^7.2.0",
+    "@vitest/coverage-v8": "^4.1.7",
     "concurrently": "^9.2.1",
-    "eslint": "^10.4.0"
+    "eslint": "^10.4.0",
+    "playwright": "^1.60.0",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.7"
   }
 }

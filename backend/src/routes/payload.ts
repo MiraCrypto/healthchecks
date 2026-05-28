@@ -1,10 +1,9 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
-import { pingRepo } from '../db/DatabaseFactory.js'
 
 export default async function payloadRoutes(fastify: FastifyInstance) {
   fastify.get('/:pingId', async (request: FastifyRequest, reply: FastifyReply) => {
     const { pingId } = request.params as { pingId: string }
-    const result = await pingRepo.findPayloadById(pingId)
+    const result = await fastify.db.pingRepo.findPayloadById(pingId)
 
     if (!result || !result.payload) {
       return reply.status(404).send('Payload Not Found')

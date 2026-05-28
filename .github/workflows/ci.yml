@@ -32,3 +32,12 @@ jobs:
 
       - name: Build monorepo components
         run: npm run build
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run unit and integration tests with coverage
+        run: npm run test:coverage
+
+      - name: Run end-to-end tests
+        run: npx playwright test
