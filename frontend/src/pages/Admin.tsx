@@ -1,46 +1,50 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Container, Heading, Table, Badge, Button, Flex, Text, Dialog, TextField, Select, Callout } from '@radix-ui/themes';
-import { Plus, ArrowLeft, RefreshCw, AlertCircle } from 'lucide-react';
-import { format } from 'date-fns';
-import { User } from '@healthchecks/shared';
-import { ApiClient } from '../api/ApiClient.js';
+import type { User } from '@healthchecks/shared'
+import { Badge, Button, Callout, Container, Dialog, Flex, Heading, Select, Table, Text, TextField } from '@radix-ui/themes'
+import { format } from 'date-fns'
+import { AlertCircle, ArrowLeft, Plus, RefreshCw } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ApiClient } from '../api/ApiClient.js'
 
 export default function Admin() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const [users, setUsers] = useState<User[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   const loadUsers = async () => {
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
     try {
-      const data = await ApiClient.getUsers();
-      setUsers(data);
-    } catch (err) {
-      if ((err as Error).message.includes('Forbidden') || (err as Error).message.includes('403')) {
-        setError('Access Denied: Admins Only');
-      } else {
-        setError('Network Error or Failed to load users');
-      }
-    } finally {
-      setLoading(false);
+      const data = await ApiClient.getUsers()
+      setUsers(data)
     }
-  };
+    catch (err) {
+      if ((err as Error).message.includes('Forbidden') || (err as Error).message.includes('403')) {
+        setError('Access Denied: Admins Only')
+      }
+      else {
+        setError('Network Error or Failed to load users')
+      }
+    }
+    finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    loadUsers();
-  }, []);
+    loadUsers()
+  }, [])
 
   const handleRoleChange = async (userId: string, newRole: 'USER' | 'ADMIN') => {
     try {
-      await ApiClient.updateUserRole(userId, { role: newRole });
-      loadUsers();
-    } catch (err) {
-      setError((err as Error).message || 'Error updating role');
+      await ApiClient.updateUserRole(userId, { role: newRole })
+      loadUsers()
     }
-  };
+    catch (err) {
+      setError((err as Error).message || 'Error updating role')
+    }
+  }
 
   if (error) {
     return (
@@ -53,20 +57,26 @@ export default function Admin() {
           <Button variant="soft" color="gray" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>Back to Dashboard</Button>
         </Flex>
       </Container>
-    );
+    )
   }
 
   return (
     <Container size="4" py="6">
       <Flex mb="6" align="center" gap="3">
-        <Button variant="ghost" color="gray" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}><ArrowLeft size={16} /> Back</Button>
+        <Button variant="ghost" color="gray" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
+          <ArrowLeft size={16} />
+          {' '}
+          Back
+        </Button>
       </Flex>
 
       <Flex justify="between" align="center" mb="8">
         <Heading size="8" style={{ color: 'var(--slate-12)' }}>User Management</Heading>
         <Flex gap="3" align="center">
           <Button variant="soft" color="iris" onClick={loadUsers} disabled={loading} style={{ cursor: 'pointer' }}>
-            <RefreshCw size={16} /> Refresh
+            <RefreshCw size={16} />
+            {' '}
+            Refresh
           </Button>
           <CreateUserDialog onCreated={loadUsers} />
         </Flex>
@@ -96,7 +106,7 @@ export default function Admin() {
               </Table.Cell>
               <Table.Cell><Text color="gray">{format(new Date(u.createdAt), 'MMM d, yyyy')}</Text></Table.Cell>
               <Table.Cell>
-                <Select.Root size="2" value={u.role} onValueChange={(val: 'USER'|'ADMIN') => handleRoleChange(u.id, val)}>
+                <Select.Root size="2" value={u.role} onValueChange={(val: 'USER' | 'ADMIN') => handleRoleChange(u.id, val)}>
                   <Select.Trigger variant="soft" />
                   <Select.Content>
                     <Select.Item value="USER">User</Select.Item>
@@ -109,33 +119,39 @@ export default function Admin() {
         </Table.Body>
       </Table.Root>
     </Container>
-  );
+  )
 }
 
 function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
-  const [username, setUsername] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [role, setRole] = useState<'USER' | 'ADMIN'>('USER');
-  const [error, setError] = useState<string>('');
+  const [username, setUsername] = useState<string>('')
+  const [password, setPassword] = useState<string>('')
+  const [role, setRole] = useState<'USER' | 'ADMIN'>('USER')
+  const [error, setError] = useState<string>('')
 
   const handleSubmit = async () => {
-    if (!username.trim() || !password.trim()) return;
-    setError('');
+    if (!username.trim() || !password.trim())
+      return
+    setError('')
     try {
-      await ApiClient.createUser({ username, password, role });
-      setUsername('');
-      setPassword('');
-      setRole('USER');
-      onCreated();
-    } catch (err) {
-      setError((err as Error).message || 'Error creating user');
+      await ApiClient.createUser({ username, password, role })
+      setUsername('')
+      setPassword('')
+      setRole('USER')
+      onCreated()
     }
-  };
+    catch (err) {
+      setError((err as Error).message || 'Error creating user')
+    }
+  }
 
   return (
     <Dialog.Root>
       <Dialog.Trigger>
-        <Button variant="solid" style={{ cursor: 'pointer' }}><Plus size={16} /> Add User</Button>
+        <Button variant="solid" style={{ cursor: 'pointer' }}>
+          <Plus size={16} />
+          {' '}
+          Add User
+        </Button>
       </Dialog.Trigger>
       <Dialog.Content style={{ maxWidth: 450 }}>
         <Dialog.Title>Create New User</Dialog.Title>
@@ -146,15 +162,15 @@ function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
         <Flex direction="column" gap="4">
           <label>
             <Text as="div" size="2" mb="2" weight="medium">Username</Text>
-            <TextField.Root size="3" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username" />
+            <TextField.Root size="3" value={username} onChange={e => setUsername(e.target.value)} placeholder="username" />
           </label>
           <label>
             <Text as="div" size="2" mb="2" weight="medium">Password</Text>
-            <TextField.Root size="3" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+            <TextField.Root size="3" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
           </label>
           <label>
             <Text as="div" size="2" mb="2" weight="medium">Role</Text>
-            <Select.Root size="3" value={role} onValueChange={(val: 'USER'|'ADMIN') => setRole(val)}>
+            <Select.Root size="3" value={role} onValueChange={(val: 'USER' | 'ADMIN') => setRole(val)}>
               <Select.Trigger style={{ width: '100%' }} />
               <Select.Content>
                 <Select.Item value="USER">User</Select.Item>
@@ -173,5 +189,5 @@ function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
         </Flex>
       </Dialog.Content>
     </Dialog.Root>
-  );
+  )
 }

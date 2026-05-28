@@ -34,7 +34,7 @@ npm run dev
 ```
 
 - **Frontend Application**: `http://localhost:5173`
-- **Backend API**: `http://localhost:3000` (Proxy automatically handles `/api` and `/ping` calls from the frontend)
+- **Backend API**: `http://localhost:8080` (Proxy automatically handles `/api` and `/ping` calls from the frontend)
 
 ---
 
@@ -44,7 +44,7 @@ For production, the backend is designed to swap to **PostgreSQL** purely using e
 
 ### Environment Variables (`backend/.env`)
 ```bash
-PORT=3000
+PORT=8080
 NODE_ENV=production
 DB_DIALECT=postgres
 DATABASE_URL=postgres://user:password@localhost:5432/healthchecks

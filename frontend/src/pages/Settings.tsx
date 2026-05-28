@@ -1,74 +1,82 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Container, Heading, Flex, Button, TextField, Text, TextArea, Callout, Card } from '@radix-ui/themes';
-import { ArrowLeft, Check, AlertCircle } from 'lucide-react';
-import { ApiClient } from '../api/ApiClient.js';
+import { Button, Callout, Card, Container, Flex, Heading, Text, TextArea, TextField } from '@radix-ui/themes'
+import { AlertCircle, ArrowLeft, Check } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ApiClient } from '../api/ApiClient.js'
 
 export default function Settings() {
-  const [displayName, setDisplayName] = useState('');
-  const [description, setDescription] = useState('');
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  const [displayName, setDisplayName] = useState('')
+  const [description, setDescription] = useState('')
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
 
-  const [profileMessage, setProfileMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-  const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [profileMessage, setProfileMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const data = await ApiClient.getMe();
-        setDisplayName(data.displayName || '');
-        setDescription(data.description || '');
-      } catch (err) {
+        const data = await ApiClient.getMe()
+        setDisplayName(data.displayName || '')
+        setDescription(data.description || '')
+      }
+      catch (err) {
         if ((err as Error).message === 'Unauthorized' || (err as Error).message.includes('401')) {
-          navigate('/login');
-        } else {
-          console.error(err);
+          navigate('/login')
+        }
+        else {
+          console.error(err)
         }
       }
-    };
-    loadUser();
-  }, [navigate]);
+    }
+    loadUser()
+  }, [navigate])
 
   const handleUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setProfileMessage(null);
+    e.preventDefault()
+    setProfileMessage(null)
     try {
-      await ApiClient.updateProfile({ displayName: displayName.trim() || null, description: description.trim() || null });
-      setProfileMessage({ type: 'success', text: 'Profile updated successfully' });
-    } catch (err) {
-      setProfileMessage({ type: 'error', text: (err as Error).message || 'Failed to update profile' });
+      await ApiClient.updateProfile({ displayName: displayName.trim() || null, description: description.trim() || null })
+      setProfileMessage({ type: 'success', text: 'Profile updated successfully' })
     }
-  };
+    catch (err) {
+      setProfileMessage({ type: 'error', text: (err as Error).message || 'Failed to update profile' })
+    }
+  }
 
   const handleChangePassword = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setPasswordMessage(null);
+    e.preventDefault()
+    setPasswordMessage(null)
     if (!currentPassword || !newPassword) {
-      setPasswordMessage({ type: 'error', text: 'Please fill out both password fields' });
-      return;
+      setPasswordMessage({ type: 'error', text: 'Please fill out both password fields' })
+      return
     }
     if (newPassword.length < 6) {
-      setPasswordMessage({ type: 'error', text: 'New password must be at least 6 characters' });
-      return;
+      setPasswordMessage({ type: 'error', text: 'New password must be at least 6 characters' })
+      return
     }
 
     try {
-      await ApiClient.changePassword({ currentPassword, newPassword });
-      setPasswordMessage({ type: 'success', text: 'Password changed successfully' });
-      setCurrentPassword('');
-      setNewPassword('');
-    } catch (err) {
-      setPasswordMessage({ type: 'error', text: (err as Error).message || 'Failed to change password' });
+      await ApiClient.changePassword({ currentPassword, newPassword })
+      setPasswordMessage({ type: 'success', text: 'Password changed successfully' })
+      setCurrentPassword('')
+      setNewPassword('')
     }
-  };
+    catch (err) {
+      setPasswordMessage({ type: 'error', text: (err as Error).message || 'Failed to change password' })
+    }
+  }
 
   return (
     <Container size="2" py="6">
       <Flex mb="6" align="center" gap="3">
-        <Button variant="ghost" color="gray" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}><ArrowLeft size={16} /> Back</Button>
+        <Button variant="ghost" color="gray" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
+          <ArrowLeft size={16} />
+          {' '}
+          Back
+        </Button>
       </Flex>
 
       <Heading size="8" mb="6" style={{ color: 'var(--slate-12)' }}>Settings</Heading>
@@ -81,7 +89,7 @@ export default function Settings() {
 
             {profileMessage && (
               <Callout.Root color={profileMessage.type === 'success' ? 'green' : 'ruby'} variant="surface">
-                <Callout.Icon>{profileMessage.type === 'success' ? <Check size={16}/> : <AlertCircle size={16}/>}</Callout.Icon>
+                <Callout.Icon>{profileMessage.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}</Callout.Icon>
                 <Callout.Text>{profileMessage.text}</Callout.Text>
               </Callout.Root>
             )}
@@ -122,7 +130,7 @@ export default function Settings() {
 
             {passwordMessage && (
               <Callout.Root color={passwordMessage.type === 'success' ? 'green' : 'ruby'} variant="surface">
-                <Callout.Icon>{passwordMessage.type === 'success' ? <Check size={16}/> : <AlertCircle size={16}/>}</Callout.Icon>
+                <Callout.Icon>{passwordMessage.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}</Callout.Icon>
                 <Callout.Text>{passwordMessage.text}</Callout.Text>
               </Callout.Root>
             )}
@@ -158,5 +166,5 @@ export default function Settings() {
         </Card>
       </Flex>
     </Container>
-  );
+  )
 }

@@ -1,19 +1,20 @@
-import { pgTable, text, integer, timestamp, varchar, uuid, boolean, customType } from 'drizzle-orm/pg-core';
+import { Buffer } from 'node:buffer'
+import { customType, integer, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
 
-const bytea = customType<{ data: Buffer; driverData: string }>({
+const bytea = customType<{ data: Buffer, driverData: string }>({
   dataType() {
-    return 'bytea';
+    return 'bytea'
   },
   toDriver(val: Buffer): string {
-    return '\\x' + val.toString('hex');
+    return `\\x${val.toString('hex')}`
   },
   fromDriver(val: string): Buffer {
     if (typeof val === 'string' && val.startsWith('\\x')) {
-      return Buffer.from(val.slice(2), 'hex');
+      return Buffer.from(val.slice(2), 'hex')
     }
-    return Buffer.from(val as unknown as Uint8Array);
+    return Buffer.from(val as unknown as Uint8Array)
   },
-});
+})
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey(),
@@ -22,8 +23,8 @@ export const users = pgTable('users', {
   role: varchar('role', { length: 20 }).notNull().default('USER'),
   displayName: varchar('display_name', { length: 100 }),
   description: text('description'),
-  createdAt: timestamp('created_at', { mode: 'string' }).notNull().defaultNow()
-});
+  createdAt: timestamp('created_at', { mode: 'string' }).notNull().defaultNow(),
+})
 
 export const checks = pgTable('checks', {
   id: uuid('id').primaryKey(),
@@ -37,8 +38,8 @@ export const checks = pgTable('checks', {
   graceSeconds: integer('grace_seconds').notNull(),
   status: varchar('status', { length: 20 }).notNull().default('NEW'), // 'NEW', 'UP', 'DOWN', 'PAUSED'
   lastPing: timestamp('last_ping', { mode: 'string' }),
-  createdAt: timestamp('created_at', { mode: 'string' }).notNull().defaultNow()
-});
+  createdAt: timestamp('created_at', { mode: 'string' }).notNull().defaultNow(),
+})
 
 export const pings = pgTable('pings', {
   id: uuid('id').primaryKey(),
@@ -49,5 +50,5 @@ export const pings = pgTable('pings', {
   method: varchar('method', { length: 10 }),
   payload: bytea('payload'),
   mimeType: text('mime_type'),
-  createdAt: timestamp('created_at').notNull().defaultNow()
-});
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})

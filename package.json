@@ -1,10 +1,12 @@
 {
   "name": "healthchecks-workspace",
-  "private": true,
   "type": "module",
+  "private": true,
   "scripts": {
     "dev": "npx concurrently \"npm run dev -w backend\" \"npm run dev -w frontend\"",
-    "build": "npm run build --workspaces --if-present"
+    "build": "npm run build --workspaces --if-present",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "workspaces": [
     "shared",
@@ -12,6 +14,11 @@
     "frontend"
   ],
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "@antfu/eslint-config": "^9.0.0",
+    "@tsconfig/node24": "^24.0.4",
+    "@tsconfig/strictest": "^2.0.8",
+    "@tsconfig/vite-react": "^8.0.6",
+    "concurrently": "^9.2.1",
+    "eslint": "^10.4.0"
   }
 }

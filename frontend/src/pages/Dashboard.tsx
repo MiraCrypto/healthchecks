@@ -1,70 +1,74 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Container, Heading, Table, Badge, Button, Flex, Text, Dialog, TextField } from '@radix-ui/themes';
-import { Check } from '@healthchecks/shared';
-import { formatDistanceToNow } from 'date-fns';
-import { Plus, RefreshCw, LogOut, Settings as SettingsIcon, Shield, Edit2 } from 'lucide-react';
-import { TextArea } from '@radix-ui/themes';
-import { User } from '@healthchecks/shared';
-import { ApiClient } from '../api/ApiClient.js';
+import type { Check, User } from '@healthchecks/shared'
+import { Badge, Button, Container, Flex, Heading, Table, Text, TextField } from '@radix-ui/themes'
+import { formatDistanceToNow } from 'date-fns'
+import { LogOut, RefreshCw, Settings as SettingsIcon, Shield } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ApiClient } from '../api/ApiClient.js'
 
 export default function Dashboard() {
-  const [checks, setChecks] = useState<Check[]>([]);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [quickAddVal, setQuickAddVal] = useState('');
-  const [quickAddLoading, setQuickAddLoading] = useState(false);
-  const navigate = useNavigate();
+  const [checks, setChecks] = useState<Check[]>([])
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState<boolean>(true)
+  const [quickAddVal, setQuickAddVal] = useState('')
+  const [quickAddLoading, setQuickAddLoading] = useState(false)
+  const [quickAddError, setQuickAddError] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   const loadChecks = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const data = await ApiClient.getChecks();
-      setChecks(data);
-    } catch (err) {
-      if ((err as Error).message === 'Unauthorized' || (err as Error).message.includes('401')) {
-        navigate('/login');
-      } else {
-        console.error(err);
-      }
-    } finally {
-      setLoading(false);
+      const data = await ApiClient.getChecks()
+      setChecks(data)
     }
-  };
+    catch (err) {
+      if ((err as Error).message === 'Unauthorized' || (err as Error).message.includes('401')) {
+        navigate('/login')
+      }
+      else {
+        console.error(err)
+      }
+    }
+    finally {
+      setLoading(false)
+    }
+  }
 
   const loadUser = async () => {
     try {
-      const u = await ApiClient.getMe();
-      setUser(u);
-    } catch (err) {
-      console.error(err);
+      const u = await ApiClient.getMe()
+      setUser(u)
     }
-  };
+    catch (err) {
+      console.error(err)
+    }
+  }
 
   const handleLogout = async () => {
     try {
-      await ApiClient.logout();
-      navigate('/login');
-    } catch (err) {
-      console.error(err);
+      await ApiClient.logout()
+      navigate('/login')
     }
-  };
+    catch (err) {
+      console.error(err)
+    }
+  }
 
   useEffect(() => {
-    loadUser();
-    loadChecks();
-    const timer = setInterval(loadChecks, 30000);
-    return () => clearInterval(timer);
-  }, []);
+    loadUser()
+    loadChecks()
+    const timer = setInterval(loadChecks, 30000)
+    return () => clearInterval(timer)
+  }, [])
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'UP': return 'green';
-      case 'DOWN': return 'red';
-      case 'PAUSED': return 'amber';
-      default: return 'gray';
+      case 'UP': return 'green'
+      case 'DOWN': return 'red'
+      case 'PAUSED': return 'amber'
+      default: return 'gray'
     }
-  };
+  }
 
   return (
     <Container size="4" py="6">
@@ -73,22 +77,32 @@ export default function Dashboard() {
         <Flex gap="3" align="center">
           {user && (
             <Text size="2" color="gray" mr="2">
-              Welcome, <a href={`/u/${user.username}`} style={{ color: 'var(--accent-9)', textDecoration: 'none', fontWeight: 500 }}>{user.username}</a>
+              Welcome,
+              {' '}
+              <a href={`/u/${user.username}`} style={{ color: 'var(--accent-9)', textDecoration: 'none', fontWeight: 500 }}>{user.username}</a>
             </Text>
           )}
           {user?.role === 'ADMIN' && (
             <Button variant="soft" color="ruby" onClick={() => navigate('/admin')} style={{ cursor: 'pointer' }}>
-              <Shield size={16} /> Admin
+              <Shield size={16} />
+              {' '}
+              Admin
             </Button>
           )}
           <Button variant="soft" color="gray" onClick={() => navigate('/settings')} style={{ cursor: 'pointer' }}>
-            <SettingsIcon size={16} /> Settings
+            <SettingsIcon size={16} />
+            {' '}
+            Settings
           </Button>
           <Button variant="soft" color="iris" onClick={loadChecks} disabled={loading} style={{ cursor: 'pointer' }}>
-            <RefreshCw size={16} /> Refresh
+            <RefreshCw size={16} />
+            {' '}
+            Refresh
           </Button>
           <Button variant="soft" color="ruby" onClick={handleLogout} style={{ cursor: 'pointer' }}>
-            <LogOut size={16} /> Logout
+            <LogOut size={16} />
+            {' '}
+            Logout
           </Button>
         </Flex>
       </Flex>
@@ -98,25 +112,31 @@ export default function Dashboard() {
           size="3"
           placeholder="Quick Add: Type a check name and press Enter..."
           value={quickAddVal}
-          onChange={(e) => setQuickAddVal(e.target.value)}
+          onChange={e => setQuickAddVal(e.target.value)}
           disabled={quickAddLoading}
           style={{ padding: '0.5rem', borderRadius: 'var(--radius-3)' }}
           onKeyDown={async (e) => {
             if (e.key === 'Enter' && quickAddVal.trim()) {
-              setQuickAddLoading(true);
+              setQuickAddLoading(true)
+              setQuickAddError(null)
               try {
-                await ApiClient.createCheck({ name: quickAddVal.trim() });
-                setQuickAddVal('');
-                await loadChecks();
-              } catch (err) {
-                console.error(err);
-                alert('Failed to create check: ' + ((err as Error).message || 'Unknown error'));
-              } finally {
-                setQuickAddLoading(false);
+                await ApiClient.createCheck({ name: quickAddVal.trim() })
+                setQuickAddVal('')
+                await loadChecks()
+              }
+              catch (err) {
+                console.error(err)
+                setQuickAddError((err as Error).message || 'Unknown error')
+              }
+              finally {
+                setQuickAddLoading(false)
               }
             }
           }}
         />
+        {quickAddError && (
+          <Text color="ruby" size="2">{quickAddError}</Text>
+        )}
       </Flex>
 
       {checks.length === 0 && (
@@ -133,15 +153,18 @@ export default function Dashboard() {
 
       {Object.entries(
         checks.reduce((acc, check) => {
-          const g = check.group || 'Default';
-          if (!acc[g]) acc[g] = [];
-          acc[g].push(check);
-          return acc;
-        }, {} as Record<string, Check[]>)
+          const g = check.group || 'Default'
+          if (!acc[g])
+            acc[g] = []
+          acc[g].push(check)
+          return acc
+        }, {} as Record<string, Check[]>),
       ).sort(([g1], [g2]) => {
-        if (g1 === 'Default') return 1;
-        if (g2 === 'Default') return -1;
-        return g1.localeCompare(g2);
+        if (g1 === 'Default')
+          return 1
+        if (g2 === 'Default')
+          return -1
+        return g1.localeCompare(g2)
       }).map(([groupName, groupChecks]) => (
         <Flex key={groupName} direction="column" mb="8" gap="4">
           <Heading size="5" style={{ color: 'var(--slate-11)' }}>{groupName}</Heading>
@@ -181,7 +204,9 @@ export default function Dashboard() {
                   </Table.Cell>
                   <Table.Cell>
                     <Text size="2" color="gray">
-                      {(check.intervalSeconds / 60).toFixed(0)} min
+                      {(check.intervalSeconds / 60).toFixed(0)}
+                      {' '}
+                      min
                     </Text>
                   </Table.Cell>
                   <Table.Cell>
@@ -199,5 +224,5 @@ export default function Dashboard() {
       ))}
 
     </Container>
-  );
+  )
 }

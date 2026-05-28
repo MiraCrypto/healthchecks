@@ -1,16 +1,17 @@
-import { sqliteTable, text, integer, customType } from 'drizzle-orm/sqlite-core';
+import type { Buffer } from 'node:buffer'
+import { customType, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
-const blobType = customType<{ data: Buffer; driverData: Buffer }>({
+const blobType = customType<{ data: Buffer, driverData: Buffer }>({
   dataType() {
-    return 'blob';
+    return 'blob'
   },
   toDriver(val: Buffer): Buffer {
-    return val;
+    return val
   },
   fromDriver(val: Buffer): Buffer {
-    return val;
+    return val
   },
-});
+})
 
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
@@ -19,8 +20,8 @@ export const users = sqliteTable('users', {
   role: text('role', { enum: ['USER', 'ADMIN'] }).notNull().default('USER'),
   displayName: text('display_name'),
   description: text('description'),
-  createdAt: text('created_at').notNull()
-});
+  createdAt: text('created_at').notNull(),
+})
 
 export const checks = sqliteTable('checks', {
   id: text('id').primaryKey(),
@@ -34,8 +35,8 @@ export const checks = sqliteTable('checks', {
   graceSeconds: integer('grace_seconds').notNull(),
   status: text('status', { enum: ['NEW', 'UP', 'DOWN', 'PAUSED'] }).notNull().default('NEW'),
   lastPing: text('last_ping'),
-  createdAt: text('created_at').notNull()
-});
+  createdAt: text('created_at').notNull(),
+})
 
 export const pings = sqliteTable('pings', {
   id: text('id').primaryKey(),
@@ -46,5 +47,5 @@ export const pings = sqliteTable('pings', {
   method: text('method'),
   payload: blobType('payload'),
   mimeType: text('mime_type'),
-  createdAt: text('created_at').notNull()
-});
+  createdAt: text('created_at').notNull(),
+})
