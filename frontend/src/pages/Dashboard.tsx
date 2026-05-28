@@ -154,9 +154,9 @@ export default function Dashboard() {
       {Object.entries(
         checks.reduce((acc, check) => {
           const g = check.group || 'Default'
-          if (!acc[g])
-            acc[g] = []
-          acc[g].push(check)
+          const currentGroup = acc[g] ?? []
+          currentGroup.push(check)
+          acc[g] = currentGroup
           return acc
         }, {} as Record<string, Check[]>),
       ).sort(([g1], [g2]) => {
