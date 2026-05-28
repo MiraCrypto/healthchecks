@@ -5,6 +5,7 @@ import { LogOut, RefreshCw, Settings as SettingsIcon, Shield } from 'lucide-reac
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiClient } from '../api/ApiClient.js'
+import { StatusBadge } from '../components/shared/StatusBadge.js'
 
 export default function Dashboard() {
   const [checks, setChecks] = useState<Check[]>([])
@@ -60,15 +61,6 @@ export default function Dashboard() {
     const timer = setInterval(loadChecks, 30000)
     return () => clearInterval(timer)
   }, [])
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'UP': return 'green'
-      case 'DOWN': return 'red'
-      case 'PAUSED': return 'amber'
-      default: return 'gray'
-    }
-  }
 
   return (
     <Container size="4" py="6">
@@ -195,7 +187,7 @@ export default function Dashboard() {
                     </Flex>
                   </Table.RowHeaderCell>
                   <Table.Cell>
-                    <Badge color={getStatusColor(check.status)} radius="full" size="2">{check.status}</Badge>
+                    <StatusBadge status={check.status} />
                   </Table.Cell>
                   <Table.Cell>
                     <Text size="2" color="gray">
