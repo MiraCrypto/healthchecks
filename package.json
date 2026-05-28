@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "npx concurrently \"npm run dev -w backend\" \"npm run dev -w frontend\"",
     "build": "npm run build --workspaces --if-present",
+    "type-check": "concurrently \"npm run type-check -w shared\" \"npm run type-check -w backend\" \"npm run type-check -w frontend\"",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },

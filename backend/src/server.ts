@@ -48,6 +48,7 @@ async function buildServer() {
       const secret = JWT_SECRET || 'supersecret123'
       const decoded = jwt.verify(token, secret) as { id: string, username: string, role: 'USER' | 'ADMIN' }
       request.user = decoded
+      return
     }
     catch {
       return reply.status(401).send({ error: 'Invalid Token' })
