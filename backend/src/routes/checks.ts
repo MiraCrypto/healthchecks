@@ -1,7 +1,7 @@
 import type { Check } from '@healthchecks/shared'
 import type { FastifyInstance } from 'fastify'
 import crypto from 'node:crypto'
-import { CreateCheckSchema, UpdateCheckSchema } from '@healthchecks/shared'
+import { CreateCheckSchema, UpdateCheckSchema, formatCheck } from '@healthchecks/shared'
 import { z } from 'zod'
 import { checkRepo, pingRepo } from '../db/DatabaseFactory.js'
 
@@ -11,7 +11,7 @@ export default async function checkRoutes(fastify: FastifyInstance) {
   fastify.get('/', async (request, reply) => {
     const userId = request.user!.id
     const checks = await checkRepo.findAll(userId)
-    return reply.send(checks)
+    return reply.send(checks.map(formatCheck))
   })
 
   fastify.get('/:id', async (request, reply) => {
@@ -23,7 +23,7 @@ export default async function checkRoutes(fastify: FastifyInstance) {
     const check = await checkRepo.findById(id, userId)
     if (!check)
       return reply.status(404).send({ error: 'Check not found' })
-    return reply.send(check)
+    return reply.send(formatCheck(check))
   })
 
   fastify.get('/:id/pings', async (request, reply) => {
@@ -56,14 +56,14 @@ export default async function checkRoutes(fastify: FastifyInstance) {
       description: data.description || null,
       tags: data.tags || undefined,
       intervalSeconds: data.intervalSeconds ?? 3600,
-      graceSeconds: data.graceSeconds ?? 900,
+      graceSeconds: data.timeout_seconds ?? data.graceSeconds ?? 900,
       status: 'NEW' as const,
       lastPing: null,
       createdAt: new Date().toISOString(),
     }
 
     await checkRepo.insert(newCheck)
-    return reply.send(newCheck)
+    return reply.send(formatCheck(newCheck as Check))
   })
 
   fastify.put('/:id', async (request, reply) => {
@@ -106,8 +106,12 @@ export default async function checkRoutes(fastify: FastifyInstance) {
       cleanUpdate.tags = updateData.tags
     if (updateData.intervalSeconds !== undefined)
       cleanUpdate.intervalSeconds = updateData.intervalSeconds
-    if (updateData.graceSeconds !== undefined)
+    
+    if (updateData.timeout_seconds !== undefined)
+      cleanUpdate.graceSeconds = updateData.timeout_seconds
+    else if (updateData.graceSeconds !== undefined)
       cleanUpdate.graceSeconds = updateData.graceSeconds
+
     if (updateData.runbook !== undefined)
       cleanUpdate.runbook = updateData.runbook
     if (updateData.group !== undefined)
@@ -117,7 +121,7 @@ export default async function checkRoutes(fastify: FastifyInstance) {
 
     await checkRepo.update(id, userId, cleanUpdate)
     const updated = await checkRepo.findById(id, userId)
-    return reply.send(updated)
+    return reply.send(updated ? formatCheck(updated) : null)
   })
 
   fastify.delete('/:id', async (request, reply) => {

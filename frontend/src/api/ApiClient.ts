@@ -1,4 +1,4 @@
-import type { AdminCreateUserDTO, AdminUpdateRoleDTO, ChangePasswordDTO, Check, CreateCheckDTO, LoginDTO, Ping, UpdateCheckDTO, UpdateProfileDTO, User } from '@healthchecks/shared'
+import type { AdminCreateUserDTO, AdminUpdateRoleDTO, ChangePasswordDTO, ResolvedCheck, CreateCheckDTO, LoginDTO, Ping, UpdateCheckDTO, UpdateProfileDTO, User } from '@healthchecks/shared'
 
 const API_BASE = '/api'
 
@@ -108,23 +108,23 @@ export class ApiClient {
   }
 
   // Checks
-  static async getChecks(): Promise<Check[]> {
-    return fetchApi<Check[]>('/checks')
+  static async getChecks(): Promise<ResolvedCheck[]> {
+    return fetchApi<ResolvedCheck[]>('/checks')
   }
 
-  static async getCheck(id: string): Promise<Check> {
-    return fetchApi<Check>(`/checks/${id}`)
+  static async getCheck(id: string): Promise<ResolvedCheck> {
+    return fetchApi<ResolvedCheck>(`/checks/${id}`)
   }
 
-  static async createCheck(data: CreateCheckDTO): Promise<Check> {
-    return fetchApi<Check>('/checks', {
+  static async createCheck(data: CreateCheckDTO): Promise<ResolvedCheck> {
+    return fetchApi<ResolvedCheck>('/checks', {
       method: 'POST',
       body: JSON.stringify(data),
     })
   }
 
-  static async updateCheck(id: string, data: UpdateCheckDTO): Promise<Check> {
-    return fetchApi<Check>(`/checks/${id}`, {
+  static async updateCheck(id: string, data: UpdateCheckDTO): Promise<ResolvedCheck> {
+    return fetchApi<ResolvedCheck>(`/checks/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     })
