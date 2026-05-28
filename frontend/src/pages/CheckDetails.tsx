@@ -1,10 +1,11 @@
 import type { Check, Ping } from '@healthchecks/shared'
-import { Badge, Box, Button, Callout, Card, Container, Dialog, Flex, Grid, Heading, ScrollArea, Table, Text, TextArea, TextField } from '@radix-ui/themes'
+import { Box, Button, Callout, Card, Container, Dialog, Flex, Grid, Heading, ScrollArea, Table, Text, TextArea, TextField } from '@radix-ui/themes'
 import { format, formatDistanceToNow } from 'date-fns'
 import { AlertCircle, ArrowLeft, CheckCircle, Copy, ExternalLink, FileText, Save, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ApiClient } from '../api/ApiClient.js'
+import { StatusBadge } from '../components/shared/StatusBadge.js'
 
 function PayloadViewer({ pingId }: { pingId: string }) {
   const [content, setContent] = useState<string>('')
@@ -208,15 +209,6 @@ export default function CheckDetails() {
   if (loading || !check)
     return <Container py="6"><Text>Loading...</Text></Container>
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'UP': return 'green'
-      case 'DOWN': return 'ruby'
-      case 'PAUSED': return 'amber'
-      default: return 'gray'
-    }
-  }
-
   const pingUrl = `${window.location.origin}/ping/${check.id}`
 
   const handleCopyUrl = () => {
@@ -261,7 +253,7 @@ export default function CheckDetails() {
             Back
           </Button>
           <Heading size="7">{check.name}</Heading>
-          <Badge color={getStatusColor(check.status)} radius="full" size="2">{check.status}</Badge>
+          <StatusBadge status={check.status} />
         </Flex>
         <Flex gap="3">
           {check.status === 'PAUSED'
