@@ -3,14 +3,13 @@ import type { FastifyInstance } from 'fastify'
 import crypto from 'node:crypto'
 import { CreateCheckSchema, UpdateCheckSchema } from '@healthchecks/shared'
 import { z } from 'zod'
-import { checkRepo, pingRepo } from '../db/DatabaseFactory.js'
 
 const uuidSchema = z.string().uuid()
 
 export default async function checkRoutes(fastify: FastifyInstance) {
   fastify.get('/', async (request, reply) => {
     const userId = request.user!.id
-    const checks = await checkRepo.findAll(userId)
+    const checks = await fastify.db.checkRepo.findAll(userId)
     return reply.send(checks)
   })
 
@@ -20,7 +19,7 @@ export default async function checkRoutes(fastify: FastifyInstance) {
     if (!uuidSchema.safeParse(id).success) {
       return reply.status(400).send({ error: 'Invalid UUID format for id' })
     }
-    const check = await checkRepo.findById(id, userId)
+    const check = await fastify.db.checkRepo.findById(id, userId)
     if (!check)
       return reply.status(404).send({ error: 'Check not found' })
     return reply.send(check)
@@ -32,11 +31,11 @@ export default async function checkRoutes(fastify: FastifyInstance) {
     if (!uuidSchema.safeParse(id).success) {
       return reply.status(400).send({ error: 'Invalid UUID format for id' })
     }
-    const check = await checkRepo.findById(id, userId)
+    const check = await fastify.db.checkRepo.findById(id, userId)
     if (!check)
       return reply.status(404).send({ error: 'Check not found' })
 
-    const pings = await pingRepo.findByCheckId(id, 50)
+    const pings = await fastify.db.pingRepo.findByCheckId(id, 50)
     return reply.send(pings)
   })
 
@@ -62,7 +61,7 @@ export default async function checkRoutes(fastify: FastifyInstance) {
       createdAt: new Date().toISOString(),
     }
 
-    await checkRepo.insert(newCheck)
+    await fastify.db.checkRepo.insert(newCheck)
     return reply.send(newCheck)
   })
 
@@ -115,8 +114,8 @@ export default async function checkRoutes(fastify: FastifyInstance) {
     if (updateData.status !== undefined)
       cleanUpdate.status = updateData.status
 
-    await checkRepo.update(id, userId, cleanUpdate)
-    const updated = await checkRepo.findById(id, userId)
+    await fastify.db.checkRepo.update(id, userId, cleanUpdate)
+    const updated = await fastify.db.checkRepo.findById(id, userId)
     return reply.send(updated)
   })
 
@@ -126,7 +125,7 @@ export default async function checkRoutes(fastify: FastifyInstance) {
     if (!uuidSchema.safeParse(id).success) {
       return reply.status(400).send({ error: 'Invalid UUID format for id' })
     }
-    await checkRepo.delete(id, userId)
+    await fastify.db.checkRepo.delete(id, userId)
     return reply.send({ success: true })
   })
 }

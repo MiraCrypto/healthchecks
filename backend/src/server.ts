@@ -11,13 +11,24 @@ import payloadRoutes from './routes/payload.js'
 import pingRoutes from './routes/ping.js'
 import userRoutes from './routes/users.js'
 import './types/fastify.js'
+import type { ICheckRepository, IPingRepository, IUserRepository } from './db/repositories/interfaces.js'
 
 dotenv.config()
 
-const fastify: FastifyInstance = Fastify({ logger: true })
+export async function buildServer(deps: {
+  userRepo: IUserRepository
+  checkRepo: ICheckRepository
+  pingRepo: IPingRepository
+}) {
+  const fastify: FastifyInstance = Fastify({ logger: true })
 
-async function buildServer() {
   const { FRONTEND_URL, COOKIE_SECRET } = process.env
+
+  fastify.decorate('db', deps)
+
+  fastify.get('/health', async (_request, reply) => {
+    return reply.send({ status: 'ok' })
+  })
 
   await fastify.register(cors, {
     origin: FRONTEND_URL || 'http://localhost:5173',
@@ -32,7 +43,7 @@ async function buildServer() {
   fastify.decorateRequest('user', undefined)
   fastify.addHook('preHandler', async (request, reply) => {
     // Skip auth for ping routes and payloads
-    if (request.url.startsWith('/ping') || request.url.startsWith('/payload'))
+    if (request.url.startsWith('/ping') || request.url.startsWith('/payload') || request.url.startsWith('/health'))
       return
 
     // Skip auth for login/register
@@ -62,15 +73,3 @@ async function buildServer() {
 
   return fastify
 }
-
-buildServer().then((app) => {
-  const { PORT } = process.env
-  const portNum = Number.parseInt(PORT || '8080', 10)
-  app.listen({ port: portNum, host: '0.0.0.0' }, (err, address) => {
-    if (err) {
-      app.log.error(err)
-      process.exit(1)
-    }
-    app.log.info(`Server listening at ${address}`)
-  })
-})

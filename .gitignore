@@ -4,3 +4,7 @@ dist/
 data.db
 .env
 .env.*
+coverage/
+playwright-report/
+test-results/
+e2e-data.db

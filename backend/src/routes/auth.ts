@@ -4,7 +4,6 @@ import process from 'node:process'
 import { LoginSchema } from '@healthchecks/shared'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-import { userRepo } from '../db/DatabaseFactory.js'
 
 export default async function authRoutes(fastify: FastifyInstance) {
   fastify.post('/register', async (request, reply) => {
@@ -16,7 +15,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
     const { username, password } = parseRes.data
 
-    const existing = await userRepo.findByUsername(username)
+    const existing = await fastify.db.userRepo.findByUsername(username)
     if (existing) {
       return reply.status(400).send({ error: 'Username already taken' })
     }
@@ -24,7 +23,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
     const passwordHash = await bcrypt.hash(password, 10)
 
     // Make the first user an admin
-    const isFirstUser = await userRepo.count() === 0
+    const isFirstUser = await fastify.db.userRepo.count() === 0
     const role: 'ADMIN' | 'USER' = isFirstUser ? 'ADMIN' : 'USER'
 
     const newUser = {
@@ -37,7 +36,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
       createdAt: new Date().toISOString(),
     }
 
-    await userRepo.insert(newUser)
+    await fastify.db.userRepo.insert(newUser)
 
     const token = jwt.sign(
       { username, id: newUser.id, role },
@@ -65,7 +64,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
     const { username, password } = parseRes.data
 
-    const user = await userRepo.findByUsername(username)
+    const user = await fastify.db.userRepo.findByUsername(username)
 
     if (!user) {
       return reply.status(401).send({ error: 'Invalid credentials' })
@@ -102,7 +101,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
     const userToken = request.user
     if (!userToken)
       return reply.status(401).send({ error: 'Unauthorized' })
-    const user = await userRepo.findByUsername(userToken.username)
+    const user = await fastify.db.userRepo.findByUsername(userToken.username)
     if (!user)
       return reply.status(401).send({ error: 'Unauthorized' })
 

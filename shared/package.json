@@ -9,13 +9,16 @@
     }
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "vitest run"
   },
   "dependencies": {
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tsconfig/node-lts": "^24.0.0",
-    "typescript": "^6.0.2"
+    "@vitest/coverage-v8": "^4.1.7",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.7"
   }
 }

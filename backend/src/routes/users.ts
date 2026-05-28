@@ -3,18 +3,14 @@ import crypto from 'node:crypto'
 import { AdminCreateUserSchema, AdminUpdateRoleSchema, ChangePasswordSchema, UpdateProfileSchema } from '@healthchecks/shared'
 import bcrypt from 'bcrypt'
 import { z } from 'zod'
-import { userRepo } from '../db/DatabaseFactory.js'
 
 const uuidSchema = z.string().uuid()
-
-// We'll expose raw DB instances via userRepo to make custom queries if needed,
-// but for simplicity we'll just add the necessary methods to userRepo.
 
 export default async function userRoutes(fastify: FastifyInstance) {
   // Public Profile
   fastify.get('/:username', async (request, reply) => {
     const { username } = request.params as { username: string }
-    const user = await userRepo.findByUsername(username)
+    const user = await fastify.db.userRepo.findByUsername(username)
     if (!user) {
       return reply.status(404).send({ error: 'User not found' })
     }
@@ -34,7 +30,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
       return reply.status(400).send({ error: 'Invalid payload' })
     }
 
-    await userRepo.update(userToken.id, parseRes.data)
+    await fastify.db.userRepo.update(userToken.id, parseRes.data)
     return reply.send({ message: 'Profile updated' })
   })
 
@@ -48,7 +44,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
 
     const { currentPassword, newPassword } = parseRes.data
 
-    const user = await userRepo.findById(userToken.id)
+    const user = await fastify.db.userRepo.findById(userToken.id)
     if (!user)
       return reply.status(404).send({ error: 'User not found' })
 
@@ -58,7 +54,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10)
-    await userRepo.update(userToken.id, { passwordHash })
+    await fastify.db.userRepo.update(userToken.id, { passwordHash })
 
     return reply.send({ message: 'Password updated' })
   })
@@ -69,7 +65,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
     if (userToken.role !== 'ADMIN') {
       return reply.status(403).send({ error: 'Forbidden' })
     }
-    const users = await userRepo.findAll()
+    const users = await fastify.db.userRepo.findAll()
     return reply.send(users.map(u => ({
       id: u.id,
       username: u.username,
@@ -93,7 +89,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
 
     const { username, password, role } = parseRes.data
 
-    const existing = await userRepo.findByUsername(username)
+    const existing = await fastify.db.userRepo.findByUsername(username)
     if (existing) {
       return reply.status(400).send({ error: 'Username already taken' })
     }
@@ -109,7 +105,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
       createdAt: new Date().toISOString(),
     }
 
-    await userRepo.insert(newUser)
+    await fastify.db.userRepo.insert(newUser)
     return reply.send({ message: 'User created successfully', user: { id: newUser.id, username, role } })
   })
 
@@ -128,12 +124,12 @@ export default async function userRoutes(fastify: FastifyInstance) {
       return reply.status(400).send({ error: 'Invalid payload' })
     }
 
-    const userToUpdate = await userRepo.findById(id)
+    const userToUpdate = await fastify.db.userRepo.findById(id)
     if (!userToUpdate) {
       return reply.status(404).send({ error: 'User not found' })
     }
 
-    await userRepo.update(id, { role: parseRes.data.role })
+    await fastify.db.userRepo.update(id, { role: parseRes.data.role })
     return reply.send({ message: 'User role updated' })
   })
 }

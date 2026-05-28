@@ -3,7 +3,6 @@ import type { FastifyInstance } from 'fastify'
 import { Buffer } from 'node:buffer'
 import crypto from 'node:crypto'
 import { z } from 'zod'
-import { checkRepo, pingRepo } from '../db/DatabaseFactory.js'
 
 const uuidSchema = z.string().uuid()
 
@@ -21,7 +20,7 @@ export default async function pingRoutes(fastify: FastifyInstance) {
       return reply.status(400).send({ error: 'Invalid UUID format for check' })
     }
 
-    const check = await checkRepo.findByIdUnscoped(uuid)
+    const check = await fastify.db.checkRepo.findByIdUnscoped(uuid)
     if (!check) {
       return reply.status(404).send('Not Found')
     }
@@ -52,10 +51,10 @@ export default async function pingRoutes(fastify: FastifyInstance) {
       insertData.payload = payload
     }
 
-    await pingRepo.insert(insertData)
+    await fastify.db.pingRepo.insert(insertData)
 
     // Update the check status
-    await checkRepo.updateUnscoped(uuid, {
+    await fastify.db.checkRepo.updateUnscoped(uuid, {
       lastPing: now,
       status: 'UP',
     })
